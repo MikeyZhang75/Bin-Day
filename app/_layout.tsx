@@ -10,8 +10,9 @@ import "react-native-reanimated";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { env } from "@/lib/env";
 
-const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
+const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
 	unsavedChangesWarning: false,
 });
 export default function RootLayout() {

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Alert,
 	FlatList,
@@ -18,13 +18,20 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { api } from "@/convex/_generated/api";
+import type { CouncilData } from "@/convex/councilServices";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import type { GooglePrediction } from "@/types/googlePlaces";
+import type {
+	GooglePlaceDetails,
+	GooglePrediction,
+} from "@/types/googlePlaces";
 
 export default function SearchScreen() {
 	const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 	const [selectedCouncil, setSelectedCouncil] = useState<string | null>(null);
-	const [councilData, setCouncilData] = useState<any>(null);
+	const [selectedPlaceDetails, setSelectedPlaceDetails] =
+		useState<GooglePlaceDetails | null>(null);
+	const [councilData, setCouncilData] = useState<CouncilData | null>(null);
+	const [isLoadingCouncilData, setIsLoadingCouncilData] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [searchResults, setSearchResults] = useState<GooglePrediction[]>([]);
 	const [sessionToken, setSessionToken] = useState<string>(uuidv4());
@@ -45,6 +52,33 @@ export default function SearchScreen() {
 	const autocomplete = useAction(api.googlePlaces.autocomplete);
 	const placeDetails = useAction(api.googlePlaces.placeDetails);
 	const getCouncilData = useAction(api.councilServices.getCouncilData);
+
+	// Fetch council data when council changes
+	useEffect(() => {
+		if (selectedCouncil && selectedPlaceDetails) {
+			// Clear previous council data immediately and set loading
+			setCouncilData(null);
+			setIsLoadingCouncilData(true);
+
+			// Fetch new council data
+			getCouncilData({
+				council: selectedCouncil,
+				placeDetails: selectedPlaceDetails,
+			})
+				.then((councilResponse) => {
+					setCouncilData(councilResponse);
+					setIsLoadingCouncilData(false);
+				})
+				.catch((error) => {
+					console.error("Error fetching council data:", error);
+					setCouncilData(null);
+					setIsLoadingCouncilData(false);
+				});
+		} else {
+			setCouncilData(null);
+			setIsLoadingCouncilData(false);
+		}
+	}, [selectedCouncil, selectedPlaceDetails, getCouncilData]);
 
 	const searchForAddress = useCallback(
 		async (query: string) => {
@@ -84,6 +118,7 @@ export default function SearchScreen() {
 
 			if (response.result) {
 				setSelectedAddress(response.result.formatted_address);
+				setSelectedPlaceDetails(response.result);
 
 				// Extract administrative_area_level_2 (council/municipality)
 				const council = response.result.address_components.find((component) =>
@@ -92,27 +127,14 @@ export default function SearchScreen() {
 
 				if (council) {
 					setSelectedCouncil(council.long_name);
-
-					// Fetch council-specific data
-					try {
-						const councilResponse = await getCouncilData({
-							council: council.long_name,
-							placeDetails: response.result,
-						});
-						setCouncilData(councilResponse);
-					} catch (error) {
-						console.error("Error fetching council data:", error);
-						setCouncilData(null);
-					}
 				} else {
 					setSelectedCouncil(null);
-					setCouncilData(null);
 				}
 			} else {
 				// Fallback to prediction description
 				setSelectedAddress(prediction.description);
+				setSelectedPlaceDetails(null);
 				setSelectedCouncil(null);
-				setCouncilData(null);
 			}
 
 			setSearchResults([]);
@@ -125,8 +147,8 @@ export default function SearchScreen() {
 			console.error("Error retrieving full address:", error);
 			// Fallback to prediction description
 			setSelectedAddress(prediction.description);
+			setSelectedPlaceDetails(null);
 			setSelectedCouncil(null);
-			setCouncilData(null);
 			setSearchResults([]);
 			setSearchQuery("");
 			setShowResults(false);
@@ -143,6 +165,7 @@ export default function SearchScreen() {
 
 	const clearSelectedAddress = () => {
 		setSelectedAddress(null);
+		setSelectedPlaceDetails(null);
 		setSelectedCouncil(null);
 		setCouncilData(null);
 		inputRef.current?.focus();
@@ -184,53 +207,55 @@ export default function SearchScreen() {
 					</ThemedText>
 				</View>
 
-				{/* Search Section */}
-				<View style={styles.searchSection}>
-					<View
-						style={[
-							styles.searchContainer,
-							{ borderColor: borderColor, backgroundColor },
-						]}
-					>
-						<IconSymbol
-							name="magnifyingglass"
-							size={20}
-							color={`${textColor}60`}
-							style={styles.searchIcon}
-						/>
-						<TextInput
-							ref={inputRef}
-							style={[styles.searchInput, { color: textColor }]}
-							placeholder="Enter street address, suburb or postcode"
-							placeholderTextColor={`${textColor}60`}
-							value={searchQuery}
-							onChangeText={(text) => {
-								setSearchQuery(text);
-								searchForAddress(text);
-							}}
-							onFocus={() => {
-								if (searchResults.length > 0) {
-									setShowResults(true);
-								}
-							}}
-							returnKeyType="search"
-							autoCorrect={false}
-							autoCapitalize="none"
-						/>
-						{searchQuery.length > 0 && (
-							<Pressable onPress={clearSearch} style={styles.clearButton}>
-								<IconSymbol
-									name="xmark.circle.fill"
-									size={20}
-									color={`${textColor}40`}
-								/>
-							</Pressable>
-						)}
+				{/* Search Section - Only show when no address selected */}
+				{!selectedAddress && (
+					<View style={styles.searchSection}>
+						<View
+							style={[
+								styles.searchContainer,
+								{ borderColor: borderColor, backgroundColor },
+							]}
+						>
+							<IconSymbol
+								name="magnifyingglass"
+								size={20}
+								color={`${textColor}60`}
+								style={styles.searchIcon}
+							/>
+							<TextInput
+								ref={inputRef}
+								style={[styles.searchInput, { color: textColor }]}
+								placeholder="Enter street address, suburb or postcode"
+								placeholderTextColor={`${textColor}60`}
+								value={searchQuery}
+								onChangeText={(text) => {
+									setSearchQuery(text);
+									searchForAddress(text);
+								}}
+								onFocus={() => {
+									if (searchResults.length > 0) {
+										setShowResults(true);
+									}
+								}}
+								returnKeyType="search"
+								autoCorrect={false}
+								autoCapitalize="none"
+							/>
+							{searchQuery.length > 0 && (
+								<Pressable onPress={clearSearch} style={styles.clearButton}>
+									<IconSymbol
+										name="xmark.circle.fill"
+										size={20}
+										color={`${textColor}40`}
+									/>
+								</Pressable>
+							)}
+						</View>
 					</View>
-				</View>
+				)}
 
-				{/* Search Results Dropdown */}
-				{showResults && searchResults.length > 0 && (
+				{/* Search Results Dropdown - Only show when no address selected */}
+				{!selectedAddress && showResults && searchResults.length > 0 && (
 					<View style={styles.resultsWrapper}>
 						<View
 							style={[
@@ -307,33 +332,27 @@ export default function SearchScreen() {
 								<ThemedText style={styles.councilName}>
 									{selectedCouncil}
 								</ThemedText>
-								{councilData && (
-									<View style={styles.councilDataSection}>
-										{councilData.supported ? (
-											<>
-												{councilData.id && (
+								<View style={styles.councilDataSection}>
+									{isLoadingCouncilData ? (
+										<ThemedText style={styles.councilDataText}>
+											Loading council data...
+										</ThemedText>
+									) : councilData ? (
+										councilData.supported && councilData.result ? (
+											<View>
+												{councilData.result.id && (
 													<ThemedText style={styles.councilDataText}>
-														Property ID: {councilData.id}
+														Property ID: {councilData.result.id}
 													</ThemedText>
 												)}
-												{councilData.data?.municipalSubdivision && (
-													<ThemedText style={styles.councilDataText}>
-														Ward: {councilData.data.municipalSubdivision}
-													</ThemedText>
-												)}
-												{councilData.message && (
-													<ThemedText style={styles.councilDataText}>
-														{councilData.message}
-													</ThemedText>
-												)}
-											</>
+											</View>
 										) : (
 											<ThemedText style={styles.councilUnsupported}>
 												{councilData.message}
 											</ThemedText>
-										)}
-									</View>
-								)}
+										)
+									) : null}
+								</View>
 							</View>
 						)}
 					</View>
