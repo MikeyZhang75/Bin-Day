@@ -2,10 +2,17 @@ import { v } from "convex/values";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import { action } from "./_generated/server";
 
-export type CouncilDataResult = {
+type CouncilDataResult = {
 	id: string | null;
 	data: unknown;
 	message?: string;
+};
+
+export type CouncilData = {
+	supported: boolean;
+	council: string;
+	message?: string;
+	result?: CouncilDataResult;
 };
 
 type MonashApiResponse = {
@@ -149,7 +156,7 @@ export const getCouncilData = action({
 				supported: false,
 				council: normalizedCouncil,
 				message: `Council "${normalizedCouncil}" is not currently supported`,
-			};
+			} as CouncilData;
 		}
 
 		try {
@@ -157,8 +164,9 @@ export const getCouncilData = action({
 			return {
 				supported: true,
 				council: normalizedCouncil,
-				...result,
-			};
+				message: "OK",
+				result,
+			} as CouncilData;
 		} catch (error) {
 			console.error(`Error fetching data for ${normalizedCouncil}:`, error);
 			throw error;
