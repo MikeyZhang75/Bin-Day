@@ -13,7 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as geocoding from "../geocoding.js";
+import type * as councilServices from "../councilServices.js";
 import type * as googlePlaces from "../googlePlaces.js";
 
 /**
@@ -25,7 +25,7 @@ import type * as googlePlaces from "../googlePlaces.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  geocoding: typeof geocoding;
+  councilServices: typeof councilServices;
   googlePlaces: typeof googlePlaces;
 }>;
 export declare const api: FilterApi<
