@@ -1,4 +1,8 @@
 import { v } from "convex/values";
+import type {
+	GoogleAutocompleteResponse,
+	GooglePlaceDetailsResponse,
+} from "@/types/googlePlaces";
 import { action } from "./_generated/server";
 
 // Store the API key securely in environment variables
@@ -46,7 +50,7 @@ export const autocomplete = action({
 			return {
 				predictions: data.predictions || [],
 				status: data.status,
-			};
+			} as GoogleAutocompleteResponse;
 		} catch (error) {
 			console.error("Autocomplete error:", error);
 			throw new Error("Failed to fetch address predictions");
@@ -95,7 +99,7 @@ export const placeDetails = action({
 			return {
 				result: data.result,
 				status: data.status,
-			};
+			} as GooglePlaceDetailsResponse;
 		} catch (error) {
 			console.error("Place details error:", error);
 			throw new Error("Failed to fetch place details");

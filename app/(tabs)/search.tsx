@@ -23,6 +23,8 @@ import type { GooglePrediction } from "@/types/googlePlaces";
 
 export default function SearchScreen() {
 	const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+	const [selectedCouncil, setSelectedCouncil] = useState<string | null>(null);
+	const [councilData, setCouncilData] = useState<any>(null);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [searchResults, setSearchResults] = useState<GooglePrediction[]>([]);
 	const [sessionToken, setSessionToken] = useState<string>(uuidv4());
@@ -42,6 +44,7 @@ export default function SearchScreen() {
 	// Convex actions
 	const autocomplete = useAction(api.googlePlaces.autocomplete);
 	const placeDetails = useAction(api.googlePlaces.placeDetails);
+	const getCouncilData = useAction(api.councilServices.getCouncilData);
 
 	const searchForAddress = useCallback(
 		async (query: string) => {
@@ -56,8 +59,6 @@ export default function SearchScreen() {
 					input: query,
 					sessionToken,
 				});
-
-				console.log("response", JSON.stringify(response, null, 2));
 
 				if (response.predictions && response.predictions.length > 0) {
 					setSearchResults(response.predictions);
@@ -81,13 +82,37 @@ export default function SearchScreen() {
 				sessionToken,
 			});
 
-			console.log("response", JSON.stringify(response, null, 2));
-
 			if (response.result) {
 				setSelectedAddress(response.result.formatted_address);
+
+				// Extract administrative_area_level_2 (council/municipality)
+				const council = response.result.address_components.find((component) =>
+					component.types.includes("administrative_area_level_2"),
+				);
+
+				if (council) {
+					setSelectedCouncil(council.long_name);
+
+					// Fetch council-specific data
+					try {
+						const councilResponse = await getCouncilData({
+							council: council.long_name,
+							placeDetails: response.result,
+						});
+						setCouncilData(councilResponse);
+					} catch (error) {
+						console.error("Error fetching council data:", error);
+						setCouncilData(null);
+					}
+				} else {
+					setSelectedCouncil(null);
+					setCouncilData(null);
+				}
 			} else {
 				// Fallback to prediction description
 				setSelectedAddress(prediction.description);
+				setSelectedCouncil(null);
+				setCouncilData(null);
 			}
 
 			setSearchResults([]);
@@ -100,6 +125,8 @@ export default function SearchScreen() {
 			console.error("Error retrieving full address:", error);
 			// Fallback to prediction description
 			setSelectedAddress(prediction.description);
+			setSelectedCouncil(null);
+			setCouncilData(null);
 			setSearchResults([]);
 			setSearchQuery("");
 			setShowResults(false);
@@ -116,6 +143,8 @@ export default function SearchScreen() {
 
 	const clearSelectedAddress = () => {
 		setSelectedAddress(null);
+		setSelectedCouncil(null);
+		setCouncilData(null);
 		inputRef.current?.focus();
 	};
 
@@ -255,6 +284,58 @@ export default function SearchScreen() {
 								</ThemedText>
 							</View>
 						</View>
+
+						{/* Council/Municipality Card */}
+						{selectedCouncil && (
+							<View
+								style={[
+									styles.councilCard,
+									{ backgroundColor: cardBgColor, borderColor },
+								]}
+							>
+								<View style={styles.councilHeader}>
+									<IconSymbol
+										name="building.columns"
+										size={20}
+										color={tintColor}
+										style={styles.councilIcon}
+									/>
+									<ThemedText style={styles.councilLabel}>
+										Council Area
+									</ThemedText>
+								</View>
+								<ThemedText style={styles.councilName}>
+									{selectedCouncil}
+								</ThemedText>
+								{councilData && (
+									<View style={styles.councilDataSection}>
+										{councilData.supported ? (
+											<>
+												{councilData.id && (
+													<ThemedText style={styles.councilDataText}>
+														Property ID: {councilData.id}
+													</ThemedText>
+												)}
+												{councilData.data?.municipalSubdivision && (
+													<ThemedText style={styles.councilDataText}>
+														Ward: {councilData.data.municipalSubdivision}
+													</ThemedText>
+												)}
+												{councilData.message && (
+													<ThemedText style={styles.councilDataText}>
+														{councilData.message}
+													</ThemedText>
+												)}
+											</>
+										) : (
+											<ThemedText style={styles.councilUnsupported}>
+												{councilData.message}
+											</ThemedText>
+										)}
+									</View>
+								)}
+							</View>
+						)}
 					</View>
 				)}
 
@@ -397,6 +478,47 @@ const styles = StyleSheet.create({
 		fontSize: 18,
 		fontWeight: "500",
 		lineHeight: 24,
+	},
+	councilCard: {
+		borderRadius: 12,
+		borderWidth: 1,
+		padding: 16,
+		marginTop: 12,
+	},
+	councilHeader: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginBottom: 8,
+	},
+	councilIcon: {
+		marginRight: 8,
+	},
+	councilLabel: {
+		fontSize: 14,
+		fontWeight: "600",
+		opacity: 0.6,
+		textTransform: "uppercase",
+		letterSpacing: 0.5,
+	},
+	councilName: {
+		fontSize: 18,
+		fontWeight: "500",
+		marginLeft: 28,
+	},
+	councilDataSection: {
+		marginTop: 8,
+		marginLeft: 28,
+	},
+	councilDataText: {
+		fontSize: 14,
+		opacity: 0.7,
+		marginTop: 4,
+	},
+	councilUnsupported: {
+		fontSize: 14,
+		opacity: 0.5,
+		fontStyle: "italic",
+		marginTop: 4,
 	},
 	emptyState: {
 		flex: 1,
