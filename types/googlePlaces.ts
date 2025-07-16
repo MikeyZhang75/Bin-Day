@@ -46,6 +46,7 @@ export interface GooglePlaceDetails {
 	};
 }
 export interface GooglePlaceDetailsResponse {
+	html_attributions: string[];
 	result: GooglePlaceDetails;
 	status: string;
 }
