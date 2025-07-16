@@ -34,6 +34,8 @@ const councilHandlers: Record<
 };
 
 async function fetchMonashData(placeDetails: GooglePlaceDetails) {
+	console.log("placeDetails", placeDetails);
+
 	// Extract address components
 	const streetNumber =
 		placeDetails.address_components.find((component) =>

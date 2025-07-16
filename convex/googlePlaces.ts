@@ -85,21 +85,14 @@ export const placeDetails = action({
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 
-			const data = await response.json();
+			const data = (await response.json()) as GooglePlaceDetailsResponse;
 
 			if (data.status !== "OK") {
-				console.error(
-					"Google Places API error:",
-					data.status,
-					data.error_message,
-				);
-				throw new Error(data.error_message || "Failed to fetch place details");
+				console.error("Google Places API error:", data.status);
+				throw new Error("Failed to fetch place details");
 			}
 
-			return {
-				result: data.result,
-				status: data.status,
-			} as GooglePlaceDetailsResponse;
+			return data;
 		} catch (error) {
 			console.error("Place details error:", error);
 			throw new Error("Failed to fetch place details");
