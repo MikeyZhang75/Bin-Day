@@ -272,7 +272,18 @@ async function searchAddress(
 		throw new Error("No results found for this address");
 	}
 
+	// Log if multiple results found (for debugging)
+	if (data.fullText.length > 1) {
+		console.log(
+			`Found ${data.fullText.length} results for address search, using first result`,
+		);
+	}
+
 	const firstResult = data.fullText[0];
+	if (!firstResult) {
+		throw new Error("Invalid response: no address data in results");
+	}
+
 	return {
 		selectionLayer: firstResult.selectionLayer,
 		mapKey: firstResult.mapKey,
@@ -367,7 +378,7 @@ function getNextCollectionDate(
 	const now = DateTime.now().setZone("Australia/Melbourne");
 	const currentDay = now.weekday;
 
-	// Calculate days until next collection
+	// Calculate days until next collection (inclusive - if today is collection day, show today)
 	let daysUntilCollection: number;
 	if (currentDay <= targetDay) {
 		daysUntilCollection = targetDay - currentDay;
@@ -383,42 +394,101 @@ function getNextCollectionDate(
 
 function parseDateString(dateString: string): number | null {
 	// Parse date string like "17 Jul 2025" or "24 Jul 2025" to Unix timestamp
-	const match = dateString.match(/(\d{1,2})\s+(\w{3})\s+(\d{4})/);
-	if (!match) return null;
+	// Also handle variations like "17 July 2025" or "17/07/2025"
 
-	const [, day, monthAbbr, year] = match;
+	// Try format: "17 Jul 2025" or "17 July 2025"
+	const monthNameMatch = dateString.match(/(\d{1,2})\s+(\w{3,})\s+(\d{4})/);
+	if (monthNameMatch) {
+		const [, dayStr, monthStr, yearStr] = monthNameMatch;
 
-	const monthMap: Record<string, number> = {
-		Jan: 1,
-		Feb: 2,
-		Mar: 3,
-		Apr: 4,
-		May: 5,
-		Jun: 6,
-		Jul: 7,
-		Aug: 8,
-		Sep: 9,
-		Oct: 10,
-		Nov: 11,
-		Dec: 12,
-	};
+		const monthMap: Record<string, number> = {
+			// 3-letter abbreviations
+			Jan: 1,
+			Feb: 2,
+			Mar: 3,
+			Apr: 4,
+			Jun: 6,
+			Jul: 7,
+			Aug: 8,
+			Sep: 9,
+			Oct: 10,
+			Nov: 11,
+			Dec: 12,
+			// Full month names
+			January: 1,
+			February: 2,
+			March: 3,
+			April: 4,
+			June: 6,
+			July: 7,
+			August: 8,
+			September: 9,
+			October: 10,
+			November: 11,
+			December: 12,
+			// Shared month
+			May: 5,
+		};
 
-	const month = monthMap[monthAbbr];
-	if (!month) return null;
+		const month = monthMap[monthStr] || monthMap[monthStr.substring(0, 3)];
+		if (!month) return null;
 
-	const melbourneDate = DateTime.fromObject(
-		{
-			year: Number.parseInt(year),
-			month: month,
-			day: Number.parseInt(day),
-			hour: 0,
-			minute: 0,
-			second: 0,
-		},
-		{ zone: "Australia/Melbourne" },
-	);
+		const day = Number.parseInt(dayStr);
+		const year = Number.parseInt(yearStr);
 
-	return Math.floor(melbourneDate.toSeconds());
+		// Validate date values
+		if (day < 1 || day > 31 || year < 2020 || year > 2100) return null;
+
+		const melbourneDate = DateTime.fromObject(
+			{
+				year: year,
+				month: month,
+				day: day,
+				hour: 0,
+				minute: 0,
+				second: 0,
+			},
+			{ zone: "Australia/Melbourne" },
+		);
+
+		return Math.floor(melbourneDate.toSeconds());
+	}
+
+	// Try format: "17/07/2025" or "17-07-2025"
+	const numericMatch = dateString.match(/(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
+	if (numericMatch) {
+		const [, dayStr, monthStr, yearStr] = numericMatch;
+		const day = Number.parseInt(dayStr);
+		const month = Number.parseInt(monthStr);
+		const year = Number.parseInt(yearStr);
+
+		// Validate date values
+		if (
+			day < 1 ||
+			day > 31 ||
+			month < 1 ||
+			month > 12 ||
+			year < 2020 ||
+			year > 2100
+		)
+			return null;
+
+		const melbourneDate = DateTime.fromObject(
+			{
+				year: year,
+				month: month,
+				day: day,
+				hour: 0,
+				minute: 0,
+				second: 0,
+			},
+			{ zone: "Australia/Melbourne" },
+		);
+
+		return Math.floor(melbourneDate.toSeconds());
+	}
+
+	return null;
 }
 
 function parseWasteInfoResponse(data: WasteInfoResponse): WasteCollectionDates {
