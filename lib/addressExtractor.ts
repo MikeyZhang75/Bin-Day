@@ -1,4 +1,8 @@
-import { COUNCIL_NAMES, type CouncilName } from "@/convex/councils";
+// Internal absolute imports
+
+// Type imports
+import type { CouncilName } from "@/convex/councils";
+import { COUNCIL_NAMES } from "@/convex/councils";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 
 export interface ExtractedAddressComponents {

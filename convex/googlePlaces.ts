@@ -92,7 +92,6 @@ export const placeDetails = action({
 				throw new Error("Failed to fetch place details");
 			}
 
-			console.log("data", data);
 			return data;
 		} catch (error) {
 			console.error("Place details error:", error);

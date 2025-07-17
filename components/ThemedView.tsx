@@ -1,5 +1,9 @@
-import { View, type ViewProps } from "react-native";
+// External package imports
 
+// Type imports
+import type { ViewProps } from "react-native";
+import { View } from "react-native";
+// Internal absolute imports
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export type ThemedViewProps = ViewProps & {

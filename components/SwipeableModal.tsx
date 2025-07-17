@@ -1,16 +1,18 @@
+// External package imports
 import { useCallback, useEffect, useRef } from "react";
+// Type imports
+import type { ModalProps, ViewStyle } from "react-native";
 import {
 	Animated,
 	Dimensions,
 	Modal,
-	type ModalProps,
 	PanResponder,
 	Platform,
 	Pressable,
 	StyleSheet,
 	View,
-	type ViewStyle,
 } from "react-native";
+// Internal absolute imports
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 // Constants

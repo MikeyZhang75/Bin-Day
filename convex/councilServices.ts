@@ -93,7 +93,6 @@ export const getCouncilData = action({
 		const handler = councilHandlers[council];
 
 		if (!handler) {
-			console.log(`No handler found for council: ${council}`);
 			return {
 				supported: false,
 				council: council,

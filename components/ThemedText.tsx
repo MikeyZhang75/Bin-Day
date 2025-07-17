@@ -1,5 +1,9 @@
-import { StyleSheet, Text, type TextProps } from "react-native";
+// External package imports
 
+// Type imports
+import type { TextProps } from "react-native";
+import { StyleSheet, Text } from "react-native";
+// Internal absolute imports
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export type ThemedTextProps = TextProps & {

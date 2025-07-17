@@ -1,3 +1,4 @@
+// External package imports
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	Alert,
@@ -15,18 +16,18 @@ import {
 import "react-native-get-random-values";
 import { useAction } from "convex/react";
 import { v4 as uuidv4 } from "uuid";
+
+// Internal absolute imports
 import { SwipeableModal } from "@/components/SwipeableModal";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { UnsupportedCouncilCard } from "@/components/UnsupportedCouncilCard";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { api } from "@/convex/_generated/api";
+// Type imports
 import type { CouncilData } from "@/convex/councilServices";
-import {
-	COUNCIL_NAMES,
-	type CouncilName,
-	isValidCouncilName,
-} from "@/convex/councils";
+import type { CouncilName } from "@/convex/councils";
+import { COUNCIL_NAMES, isValidCouncilName } from "@/convex/councils";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import type {
 	GooglePlaceDetails,

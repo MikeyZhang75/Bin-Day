@@ -1,3 +1,4 @@
+// External package imports
 import {
 	DarkTheme,
 	DefaultTheme,
@@ -8,6 +9,8 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+
+// Internal absolute imports
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { env } from "@/lib/env";
 

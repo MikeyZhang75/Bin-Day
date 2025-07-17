@@ -292,7 +292,6 @@ function parseWasteInfoResponse(data: SearchResponse): WasteCollectionDates {
 	};
 
 	if (!data.infoPanels?.info1?.feature?.fields) {
-		console.error("Invalid response structure: missing fields");
 		return dates;
 	}
 

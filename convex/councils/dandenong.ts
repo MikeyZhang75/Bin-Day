@@ -212,14 +212,12 @@ function parseWasteInfoResponse(data: WasteInfoResponse): WasteCollectionDates {
 	};
 
 	if (!data || data.length === 0) {
-		console.error("Invalid response structure: no data");
 		return dates;
 	}
 
 	// The response contains a single array with all fields
 	const fields = data[0];
 	if (!fields) {
-		console.error("Invalid response structure: no fields");
 		return dates;
 	}
 
