@@ -42,6 +42,7 @@ function parseAlpineShireWasteData(html: string): WasteCollectionDates {
 		recycling: null,
 		foodAndGardenWaste: null,
 		hardWaste: null,
+		glass: null,
 	};
 
 	// Parse Waste Collection date
