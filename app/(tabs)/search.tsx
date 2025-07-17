@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	Alert,
 	FlatList,
@@ -18,6 +18,7 @@ import { useAction } from "convex/react";
 import { v4 as uuidv4 } from "uuid";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { UnsupportedCouncilCard } from "@/components/UnsupportedCouncilCard";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { api } from "@/convex/_generated/api";
 import type { CouncilData } from "@/convex/councilServices";
@@ -72,6 +73,15 @@ export default function SearchScreen() {
 	const cardBgColor = useThemeColor(
 		{ light: "#f8f8f8", dark: "#1a1a1a" },
 		"text",
+	);
+
+	// Memoize static council list
+	const supportedCouncilsList = useMemo(() => Object.values(COUNCIL_NAMES), []);
+
+	// Memoize modal styles
+	const modalContentStyle = useMemo(
+		() => [styles.modalContent, { backgroundColor }],
+		[backgroundColor],
 	);
 
 	// Convex actions
@@ -518,51 +528,15 @@ export default function SearchScreen() {
 
 						{/* Unsupported Council Card */}
 						{unsupportedCouncil && !selectedCouncil && (
-							<View
-								style={[
-									styles.councilCard,
-									{ backgroundColor: cardBgColor, borderColor },
-								]}
-							>
-								<View style={styles.councilHeader}>
-									<IconSymbol
-										name="exclamationmark.triangle"
-										size={20}
-										color="#FF9500"
-										style={styles.councilIcon}
-									/>
-									<ThemedText style={styles.councilLabel}>
-										Council Not Supported
-									</ThemedText>
-								</View>
-								<ThemedText style={styles.councilName}>
-									{unsupportedCouncil}
-								</ThemedText>
-								<View style={styles.unsupportedContent}>
-									<ThemedText style={styles.unsupportedText}>
-										This council is not currently supported by our service.
-									</ThemedText>
-									<Pressable
-										style={styles.infoButton}
-										onPress={() => setShowSupportedCouncilsModal(true)}
-										accessibilityRole="button"
-										accessibilityLabel="View list of supported councils"
-										accessibilityHint="Opens a modal showing all councils supported by this service"
-									>
-										<IconSymbol
-											name="info.circle"
-											size={20}
-											color={tintColor}
-											style={styles.infoIcon}
-										/>
-										<ThemedText
-											style={[styles.infoButtonText, { color: tintColor }]}
-										>
-											View supported councils
-										</ThemedText>
-									</Pressable>
-								</View>
-							</View>
+							<UnsupportedCouncilCard
+								councilName={unsupportedCouncil}
+								onViewSupportedCouncils={() =>
+									setShowSupportedCouncilsModal(true)
+								}
+								backgroundColor={cardBgColor}
+								borderColor={borderColor}
+								tintColor={tintColor}
+							/>
 						)}
 					</View>
 				)}
@@ -577,12 +551,7 @@ export default function SearchScreen() {
 					accessibilityViewIsModal={true}
 				>
 					<View style={styles.modalOverlay}>
-						<View
-							style={[
-								styles.modalContent,
-								{ backgroundColor: backgroundColor },
-							]}
-						>
+						<View style={modalContentStyle}>
 							<View style={styles.modalHeader}>
 								<ThemedText style={styles.modalTitle}>
 									Supported Councils
@@ -605,7 +574,7 @@ export default function SearchScreen() {
 								<ThemedText style={styles.modalDescription}>
 									The following councils are currently supported:
 								</ThemedText>
-								{Object.values(COUNCIL_NAMES).map((council) => (
+								{supportedCouncilsList.map((council) => (
 									<View
 										key={council}
 										style={[
@@ -856,27 +825,6 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		opacity: 0.4,
 		textAlign: "center",
-	},
-	unsupportedContent: {
-		marginTop: 12,
-		marginLeft: 28,
-	},
-	unsupportedText: {
-		fontSize: 14,
-		opacity: 0.7,
-		marginBottom: 12,
-	},
-	infoButton: {
-		flexDirection: "row",
-		alignItems: "center",
-		paddingVertical: 8,
-	},
-	infoIcon: {
-		marginRight: 8,
-	},
-	infoButtonText: {
-		fontSize: 14,
-		fontWeight: "500",
 	},
 	modalOverlay: {
 		flex: 1,
