@@ -3,7 +3,6 @@ import {
 	Alert,
 	FlatList,
 	Keyboard,
-	Modal,
 	Platform,
 	Pressable,
 	SafeAreaView,
@@ -16,6 +15,7 @@ import {
 import "react-native-get-random-values";
 import { useAction } from "convex/react";
 import { v4 as uuidv4 } from "uuid";
+import { SwipeableModal } from "@/components/SwipeableModal";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { UnsupportedCouncilCard } from "@/components/UnsupportedCouncilCard";
@@ -77,12 +77,6 @@ export default function SearchScreen() {
 
 	// Memoize static council list
 	const supportedCouncilsList = useMemo(() => Object.values(COUNCIL_NAMES), []);
-
-	// Memoize modal styles
-	const modalContentStyle = useMemo(
-		() => [styles.modalContent, { backgroundColor }],
-		[backgroundColor],
-	);
 
 	// Convex actions
 	const autocomplete = useAction(api.googlePlaces.autocomplete);
@@ -542,22 +536,20 @@ export default function SearchScreen() {
 				)}
 
 				{/* Supported Councils Modal */}
-				<Modal
+				<SwipeableModal
 					visible={showSupportedCouncilsModal}
-					animationType="slide"
-					transparent={true}
-					onRequestClose={() => setShowSupportedCouncilsModal(false)}
+					onClose={() => setShowSupportedCouncilsModal(false)}
 					accessible={true}
 					accessibilityViewIsModal={true}
 				>
-					<View style={styles.modalOverlay}>
-						<View style={modalContentStyle}>
+					{(closeModal) => (
+						<>
 							<View style={styles.modalHeader}>
 								<ThemedText style={styles.modalTitle}>
 									Supported Councils
 								</ThemedText>
 								<Pressable
-									onPress={() => setShowSupportedCouncilsModal(false)}
+									onPress={closeModal}
 									style={styles.modalCloseButton}
 									accessibilityRole="button"
 									accessibilityLabel="Close modal"
@@ -594,9 +586,9 @@ export default function SearchScreen() {
 									</View>
 								))}
 							</ScrollView>
-						</View>
-					</View>
-				</Modal>
+						</>
+					)}
+				</SwipeableModal>
 
 				{/* Empty State */}
 				{!selectedAddress && searchQuery.length === 0 && (
@@ -825,27 +817,6 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		opacity: 0.4,
 		textAlign: "center",
-	},
-	modalOverlay: {
-		flex: 1,
-		backgroundColor: "rgba(0, 0, 0, 0.5)",
-		justifyContent: "flex-end",
-	},
-	modalContent: {
-		borderTopLeftRadius: 20,
-		borderTopRightRadius: 20,
-		paddingHorizontal: 20,
-		paddingTop: 20,
-		paddingBottom: Platform.OS === "ios" ? 40 : 20,
-		maxHeight: "80%",
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: -2,
-		},
-		shadowOpacity: 0.25,
-		shadowRadius: 3.84,
-		elevation: 5,
 	},
 	modalHeader: {
 		flexDirection: "row",
