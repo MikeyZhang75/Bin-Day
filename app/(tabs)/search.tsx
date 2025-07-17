@@ -449,6 +449,32 @@ export default function SearchScreen() {
 														</ThemedText>
 													</View>
 												</View>
+
+												{/* Glass Recycling */}
+												{councilData.result.glass && (
+													<View style={styles.wasteItem}>
+														<View
+															style={[
+																styles.wasteIconContainer,
+																{ backgroundColor: "#00ACC120" },
+															]}
+														>
+															<IconSymbol
+																name="wineglass"
+																size={20}
+																color="#00ACC1"
+															/>
+														</View>
+														<View style={styles.wasteContent}>
+															<ThemedText style={styles.wasteType}>
+																Glass Recycling
+															</ThemedText>
+															<ThemedText style={styles.wasteDate}>
+																{formatDate(councilData.result.glass)}
+															</ThemedText>
+														</View>
+													</View>
+												)}
 											</View>
 										) : (
 											<ThemedText style={styles.councilUnsupported}>
