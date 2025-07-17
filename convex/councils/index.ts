@@ -11,3 +11,11 @@ export const COUNCIL_NAMES = {
 } as const;
 
 export type CouncilName = (typeof COUNCIL_NAMES)[keyof typeof COUNCIL_NAMES];
+
+// Helper function to check if a string is a valid council name
+export const isValidCouncilName = (council: string): council is CouncilName => {
+	return Object.values(COUNCIL_NAMES).includes(council as CouncilName);
+};
+
+// Export error utilities
+export * from "./errors";

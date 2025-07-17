@@ -408,6 +408,7 @@ function parseDateString(dateString: string): number | null {
 			Feb: 2,
 			Mar: 3,
 			Apr: 4,
+			May: 5,
 			Jun: 6,
 			Jul: 7,
 			Aug: 8,
@@ -427,8 +428,6 @@ function parseDateString(dateString: string): number | null {
 			October: 10,
 			November: 11,
 			December: 12,
-			// Shared month
-			May: 5,
 		};
 
 		const month = monthMap[monthStr] || monthMap[monthStr.substring(0, 3)];
