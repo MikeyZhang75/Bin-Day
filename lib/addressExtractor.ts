@@ -71,15 +71,15 @@ export function getSearchAddress(
 			address = components.subpremise
 				? `${components.subpremise}/${components.streetNumber} ${components.route}`
 				: `${components.streetNumber} ${components.route}`;
-			break;
+			// Apply uppercase for these councils
+			return address.trim().toUpperCase();
 
 		default:
 			// Standard format includes locality for most councils
 			address = components.subpremise
 				? `${components.subpremise}/${components.streetNumber} ${components.route} ${components.locality}`
 				: `${components.streetNumber} ${components.route} ${components.locality}`;
+			// No uppercase for default case
+			return address.trim();
 	}
-
-	// Ensure consistent formatting by trimming whitespace and converting to uppercase
-	return address.trim().toUpperCase();
 }
