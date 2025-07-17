@@ -24,7 +24,6 @@ Always use Bun for all npm-related commands (as specified in user's global CLAUD
 - `bun run lint` - Run ESLint checks
 - `bun run check:fix` - Run Biome format and lint with automatic fixes
 - `bun run check-types` - Run TypeScript type checking
-- `bun run reset-project` - Move starter code to app-example and create blank app directory
 
 ### Code Quality
 
