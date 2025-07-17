@@ -51,13 +51,33 @@ export function extractAddressComponents(
 /**
  * Gets a formatted address string for search queries
  * @param components - Extracted address components
+ * @param council - Optional council name to format address differently
  * @returns Formatted address string for search queries (without state/postcode)
  * @example // Returns "1/26A Ormond Road, Clayton"
  */
 export function getSearchAddress(
 	components: ExtractedAddressComponents,
+	council?: string,
 ): string {
-	return components.subpremise
-		? `${components.subpremise}/${components.streetNumber} ${components.route} ${components.locality}`
-		: `${components.streetNumber} ${components.route} ${components.locality}`.trim();
+	// Construct the address string based on council-specific formatting requirements
+	let address = "";
+
+	switch (council) {
+		case "Baw Baw Shire": {
+			// Baw Baw Shire format excludes locality (suburb)
+			address = components.subpremise
+				? `${components.subpremise}/${components.streetNumber} ${components.route}`
+				: `${components.streetNumber} ${components.route}`;
+			break;
+		}
+		default: {
+			// Standard format includes locality for most councils
+			address = components.subpremise
+				? `${components.subpremise}/${components.streetNumber} ${components.route} ${components.locality}`
+				: `${components.streetNumber} ${components.route} ${components.locality}`;
+		}
+	}
+
+	// Ensure consistent formatting by trimming whitespace and converting to uppercase
+	return address.trim().toUpperCase();
 }
