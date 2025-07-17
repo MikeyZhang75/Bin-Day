@@ -5,7 +5,14 @@ import {
 } from "@/lib/addressExtractor";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../councilServices";
-import { COUNCIL_NAMES } from "../councils";
+import {
+	AddressNotFoundError,
+	COUNCIL_NAMES,
+	CouncilAPIError,
+	InvalidResponseError,
+	logError,
+	safeJsonParse,
+} from "./index";
 
 type FormResponse = {
 	name: string;
@@ -169,22 +176,22 @@ async function getSession(): Promise<{
 	);
 
 	if (!response.ok) {
-		throw new Error(`Failed to get session: ${response.status}`);
+		throw new CouncilAPIError(COUNCIL_NAMES.BAW_BAW_SHIRE, response.status);
 	}
 
 	const sessionId = response.headers.get("x-intramaps-session");
 	if (!sessionId) {
-		throw new Error("No session ID returned");
+		throw new InvalidResponseError("No session ID returned");
 	}
 
-	const data = (await response.json()) as SessionResponse;
+	const data = await safeJsonParse<SessionResponse>(response);
 
 	// Find the BawBawNearMe_Waste module
 	const wasteModule = data.moduleList.find(
 		(module) => module.name === "BawBawNearMe_Waste",
 	);
 	if (!wasteModule) {
-		throw new Error("BawBawNearMe_Waste module not found");
+		throw new InvalidResponseError("BawBawNearMe_Waste module not found");
 	}
 
 	return { sessionId, wasteModuleId: wasteModule.id };
@@ -222,10 +229,10 @@ async function getFormTemplateId(
 	);
 
 	if (!response.ok) {
-		throw new Error(`Failed to get form: ${response.status}`);
+		throw new CouncilAPIError(COUNCIL_NAMES.BAW_BAW_SHIRE, response.status);
 	}
 
-	const data = (await response.json()) as FormResponse;
+	const data = await safeJsonParse<FormResponse>(response);
 
 	// Find the form with name containing "address[Address]"
 	const addressForm = data.forms.find((form) =>
@@ -233,7 +240,7 @@ async function getFormTemplateId(
 	);
 
 	if (!addressForm) {
-		throw new Error("Address form not found");
+		throw new InvalidResponseError("Address form not found");
 	}
 
 	return addressForm.templateId;
@@ -276,13 +283,13 @@ async function searchAddress(
 	);
 
 	if (!response.ok) {
-		throw new Error(`Failed to search address: ${response.status}`);
+		throw new CouncilAPIError(COUNCIL_NAMES.BAW_BAW_SHIRE, response.status);
 	}
 
-	const data = (await response.json()) as AddressSearchResponse;
+	const data = await safeJsonParse<AddressSearchResponse>(response);
 
 	if (!data.fullText || data.fullText.length === 0) {
-		throw new Error("No results found for this address");
+		throw new AddressNotFoundError();
 	}
 
 	const firstResult = data.fullText[0];
@@ -332,10 +339,10 @@ async function getWasteInfo(
 	);
 
 	if (!response.ok) {
-		throw new Error(`Failed to get waste info: ${response.status}`);
+		throw new CouncilAPIError(COUNCIL_NAMES.BAW_BAW_SHIRE, response.status);
 	}
 
-	const data = (await response.json()) as WasteInfoResponse;
+	const data = await safeJsonParse<WasteInfoResponse>(response);
 
 	return data;
 }
@@ -475,7 +482,14 @@ export async function fetchBawBawShireData(placeDetails: GooglePlaceDetails) {
 		// Parse and return the waste collection dates
 		return parseWasteInfoResponse(wasteInfo);
 	} catch (error) {
-		console.error("Baw Baw Shire API error:", error);
-		throw new Error("Failed to fetch data from Baw Baw Shire council");
+		logError(COUNCIL_NAMES.BAW_BAW_SHIRE, error);
+		if (
+			error instanceof CouncilAPIError ||
+			error instanceof AddressNotFoundError ||
+			error instanceof InvalidResponseError
+		) {
+			throw error;
+		}
+		throw new CouncilAPIError(COUNCIL_NAMES.BAW_BAW_SHIRE);
 	}
 }

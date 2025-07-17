@@ -5,6 +5,13 @@ import {
 } from "@/lib/addressExtractor";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../councilServices";
+import {
+	AddressNotFoundError,
+	COUNCIL_NAMES,
+	CouncilAPIError,
+	logError,
+	safeJsonParse,
+} from "./index";
 
 type BallaratApiResponse = {
 	nhits: number;
@@ -116,22 +123,30 @@ export async function fetchBallaratData(
 		});
 
 		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
+			throw new CouncilAPIError(
+				COUNCIL_NAMES.CITY_OF_BALLARAT,
+				response.status,
+			);
 		}
 
-		const data = (await response.json()) as BallaratApiResponse;
-		console.log("Ballarat API response:", data);
+		const data = await safeJsonParse<BallaratApiResponse>(response);
 
 		// Check if we have any records
 		if (!data.records || data.records.length === 0) {
-			throw new Error("No collection data found for this address");
+			throw new AddressNotFoundError();
 		}
 
 		// Parse the first record (should be the most relevant match)
 		const wasteCollectionDates = parseBallaratWasteData(data.records[0]);
 		return wasteCollectionDates;
 	} catch (error) {
-		console.error("Ballarat API error:", error);
-		throw new Error("Failed to fetch data from Ballarat council");
+		logError(COUNCIL_NAMES.CITY_OF_BALLARAT, error);
+		if (
+			error instanceof CouncilAPIError ||
+			error instanceof AddressNotFoundError
+		) {
+			throw error;
+		}
+		throw new CouncilAPIError(COUNCIL_NAMES.CITY_OF_BALLARAT);
 	}
 }

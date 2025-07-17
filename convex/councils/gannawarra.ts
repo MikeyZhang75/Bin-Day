@@ -5,6 +5,13 @@ import {
 } from "@/lib/addressExtractor";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../councilServices";
+import {
+	AddressNotFoundError,
+	COUNCIL_NAMES,
+	CouncilAPIError,
+	logError,
+	safeJsonParse,
+} from "./index";
 
 type GannawarraApiResponse = {
 	Items: {
@@ -118,10 +125,10 @@ async function searchGannawarraAddress(searchQuery: string) {
 	});
 
 	if (!response.ok) {
-		throw new Error(`HTTP error! status: ${response.status}`);
+		throw new CouncilAPIError(COUNCIL_NAMES.GANNAWARRA_SHIRE, response.status);
 	}
 
-	const data = (await response.json()) as GannawarraApiResponse;
+	const data = await safeJsonParse<GannawarraApiResponse>(response);
 
 	return data;
 }
@@ -150,8 +157,16 @@ async function fetchWasteServices(geolocationId: string) {
 		},
 	});
 
-	const wasteServicesData =
-		(await wasteServicesResponse.json()) as WasteServicesResponse;
+	if (!wasteServicesResponse.ok) {
+		throw new CouncilAPIError(
+			COUNCIL_NAMES.GANNAWARRA_SHIRE,
+			wasteServicesResponse.status,
+		);
+	}
+
+	const wasteServicesData = await safeJsonParse<WasteServicesResponse>(
+		wasteServicesResponse,
+	);
 
 	return wasteServicesData;
 }
@@ -168,7 +183,7 @@ export async function fetchGannawarraData(placeDetails: GooglePlaceDetails) {
 
 		// Extract the ID from the response
 		if (!addressData || addressData.Items.length === 0) {
-			throw new Error("No results found for this address");
+			throw new AddressNotFoundError();
 		}
 
 		// Note: Gannawarra API returns null for LatLon in some cases
@@ -192,7 +207,13 @@ export async function fetchGannawarraData(placeDetails: GooglePlaceDetails) {
 
 		return wasteCollectionDates;
 	} catch (error) {
-		console.error("Gannawarra API error:", error);
-		throw new Error("Failed to fetch data from Gannawarra council");
+		logError(COUNCIL_NAMES.GANNAWARRA_SHIRE, error);
+		if (
+			error instanceof CouncilAPIError ||
+			error instanceof AddressNotFoundError
+		) {
+			throw error;
+		}
+		throw new CouncilAPIError(COUNCIL_NAMES.GANNAWARRA_SHIRE);
 	}
 }
