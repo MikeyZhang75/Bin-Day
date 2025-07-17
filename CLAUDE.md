@@ -62,7 +62,7 @@ The app uses Expo Router's file-based routing:
 
    - UI components in `components/ui/` (platform-specific implementations)
    - Reusable components directly in `components/`:
-     - `SwipeableModal.tsx` - Customizable modal with swipe-to-dismiss, animated overlay, and render prop support
+     - `SwipeableModal.tsx` - Customizable modal with swipe-to-dismiss, animated overlay, render prop support, theme-aware drag indicator, and configurable animation constants
      - `UnsupportedCouncilCard.tsx` - Card component for displaying unsupported council information
    - Custom hooks in `hooks/`
 
