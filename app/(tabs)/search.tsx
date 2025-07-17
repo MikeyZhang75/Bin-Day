@@ -19,17 +19,12 @@ import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { api } from "@/convex/_generated/api";
 import type { CouncilData } from "@/convex/councilServices";
-import { COUNCIL_NAMES, type CouncilName } from "@/convex/councils";
+import { type CouncilName, isValidCouncilName } from "@/convex/councils";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import type {
 	GooglePlaceDetails,
 	GooglePrediction,
 } from "@/types/googlePlaces";
-
-// Helper function to check if a string is a valid council name
-const isValidCouncilName = (council: string): council is CouncilName => {
-	return Object.values(COUNCIL_NAMES).includes(council as CouncilName);
-};
 
 // Helper function to format Unix timestamp to readable date
 const formatDate = (timestamp: number | null): string => {
