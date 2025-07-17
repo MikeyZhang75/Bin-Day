@@ -99,7 +99,7 @@ bin-day/
 ├── hooks/                  # Custom React hooks
 ├── lib/                    # Utility functions
 ├── types/                  # TypeScript type definitions
-└── .claude/               # AI assistant configuration
+└── CLAUDE.md               # AI assistant instructions
 ```
 
 ### Available Scripts
