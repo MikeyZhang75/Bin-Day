@@ -3,9 +3,11 @@ import {
 	Alert,
 	FlatList,
 	Keyboard,
+	Modal,
 	Platform,
 	Pressable,
 	SafeAreaView,
+	ScrollView,
 	StyleSheet,
 	TextInput,
 	TouchableOpacity,
@@ -19,7 +21,11 @@ import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { api } from "@/convex/_generated/api";
 import type { CouncilData } from "@/convex/councilServices";
-import { type CouncilName, isValidCouncilName } from "@/convex/councils";
+import {
+	COUNCIL_NAMES,
+	type CouncilName,
+	isValidCouncilName,
+} from "@/convex/councils";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import type {
 	GooglePlaceDetails,
@@ -43,6 +49,9 @@ export default function SearchScreen() {
 	const [selectedCouncil, setSelectedCouncil] = useState<CouncilName | null>(
 		null,
 	);
+	const [unsupportedCouncil, setUnsupportedCouncil] = useState<string | null>(
+		null,
+	);
 	const [selectedPlaceDetails, setSelectedPlaceDetails] =
 		useState<GooglePlaceDetails | null>(null);
 	const [councilData, setCouncilData] = useState<CouncilData | null>(null);
@@ -51,6 +60,8 @@ export default function SearchScreen() {
 	const [searchResults, setSearchResults] = useState<GooglePrediction[]>([]);
 	const [sessionToken, setSessionToken] = useState<string>(uuidv4());
 	const [showResults, setShowResults] = useState(false);
+	const [showSupportedCouncilsModal, setShowSupportedCouncilsModal] =
+		useState(false);
 	const inputRef = useRef<TextInput>(null);
 
 	// Theme colors
@@ -142,14 +153,17 @@ export default function SearchScreen() {
 
 				if (council && isValidCouncilName(council.long_name)) {
 					setSelectedCouncil(council.long_name);
+					setUnsupportedCouncil(null);
 				} else {
 					setSelectedCouncil(null);
+					setUnsupportedCouncil(council?.long_name || null);
 				}
 			} else {
 				// Fallback to prediction description
 				setSelectedAddress(prediction.description);
 				setSelectedPlaceDetails(null);
 				setSelectedCouncil(null);
+				setUnsupportedCouncil(null);
 			}
 
 			setSearchResults([]);
@@ -164,6 +178,7 @@ export default function SearchScreen() {
 			setSelectedAddress(prediction.description);
 			setSelectedPlaceDetails(null);
 			setSelectedCouncil(null);
+			setUnsupportedCouncil(null);
 			setSearchResults([]);
 			setSearchQuery("");
 			setShowResults(false);
@@ -182,6 +197,7 @@ export default function SearchScreen() {
 		setSelectedAddress(null);
 		setSelectedPlaceDetails(null);
 		setSelectedCouncil(null);
+		setUnsupportedCouncil(null);
 		setCouncilData(null);
 		inputRef.current?.focus();
 	};
@@ -488,8 +504,105 @@ export default function SearchScreen() {
 								</View>
 							</View>
 						)}
+
+						{/* Unsupported Council Card */}
+						{unsupportedCouncil && !selectedCouncil && (
+							<View
+								style={[
+									styles.councilCard,
+									{ backgroundColor: cardBgColor, borderColor },
+								]}
+							>
+								<View style={styles.councilHeader}>
+									<IconSymbol
+										name="exclamationmark.triangle"
+										size={20}
+										color="#FF9500"
+										style={styles.councilIcon}
+									/>
+									<ThemedText style={styles.councilLabel}>
+										Council Not Supported
+									</ThemedText>
+								</View>
+								<ThemedText style={styles.councilName}>
+									{unsupportedCouncil}
+								</ThemedText>
+								<View style={styles.unsupportedContent}>
+									<ThemedText style={styles.unsupportedText}>
+										This council is not currently supported by our service.
+									</ThemedText>
+									<Pressable
+										style={styles.infoButton}
+										onPress={() => setShowSupportedCouncilsModal(true)}
+									>
+										<IconSymbol
+											name="info.circle"
+											size={20}
+											color={tintColor}
+											style={styles.infoIcon}
+										/>
+										<ThemedText
+											style={[styles.infoButtonText, { color: tintColor }]}
+										>
+											View supported councils
+										</ThemedText>
+									</Pressable>
+								</View>
+							</View>
+						)}
 					</View>
 				)}
+
+				{/* Supported Councils Modal */}
+				<Modal
+					visible={showSupportedCouncilsModal}
+					animationType="slide"
+					transparent={true}
+					onRequestClose={() => setShowSupportedCouncilsModal(false)}
+				>
+					<View style={styles.modalOverlay}>
+						<View
+							style={[
+								styles.modalContent,
+								{ backgroundColor: backgroundColor },
+							]}
+						>
+							<View style={styles.modalHeader}>
+								<ThemedText style={styles.modalTitle}>
+									Supported Councils
+								</ThemedText>
+								<Pressable
+									onPress={() => setShowSupportedCouncilsModal(false)}
+									style={styles.modalCloseButton}
+								>
+									<IconSymbol
+										name="xmark.circle.fill"
+										size={24}
+										color={`${textColor}60`}
+									/>
+								</Pressable>
+							</View>
+							<ScrollView style={styles.modalScroll}>
+								<ThemedText style={styles.modalDescription}>
+									The following councils are currently supported:
+								</ThemedText>
+								{Object.values(COUNCIL_NAMES).map((council) => (
+									<View key={council} style={styles.councilListItem}>
+										<IconSymbol
+											name="checkmark.circle.fill"
+											size={20}
+											color={tintColor}
+											style={styles.councilListIcon}
+										/>
+										<ThemedText style={styles.councilListText}>
+											{council}
+										</ThemedText>
+									</View>
+								))}
+							</ScrollView>
+						</View>
+					</View>
+				</Modal>
 
 				{/* Empty State */}
 				{!selectedAddress && searchQuery.length === 0 && (
@@ -718,5 +831,82 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		opacity: 0.4,
 		textAlign: "center",
+	},
+	unsupportedContent: {
+		marginTop: 12,
+		marginLeft: 28,
+	},
+	unsupportedText: {
+		fontSize: 14,
+		opacity: 0.7,
+		marginBottom: 12,
+	},
+	infoButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingVertical: 8,
+	},
+	infoIcon: {
+		marginRight: 8,
+	},
+	infoButtonText: {
+		fontSize: 14,
+		fontWeight: "500",
+	},
+	modalOverlay: {
+		flex: 1,
+		backgroundColor: "rgba(0, 0, 0, 0.5)",
+		justifyContent: "flex-end",
+	},
+	modalContent: {
+		borderTopLeftRadius: 20,
+		borderTopRightRadius: 20,
+		paddingHorizontal: 20,
+		paddingTop: 20,
+		paddingBottom: Platform.OS === "ios" ? 40 : 20,
+		maxHeight: "80%",
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: -2,
+		},
+		shadowOpacity: 0.25,
+		shadowRadius: 3.84,
+		elevation: 5,
+	},
+	modalHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginBottom: 20,
+	},
+	modalTitle: {
+		fontSize: 24,
+		fontWeight: "700",
+	},
+	modalCloseButton: {
+		padding: 4,
+	},
+	modalScroll: {
+		marginBottom: 20,
+	},
+	modalDescription: {
+		fontSize: 16,
+		opacity: 0.7,
+		marginBottom: 20,
+	},
+	councilListItem: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingVertical: 12,
+		borderBottomWidth: 1,
+		borderBottomColor: "rgba(0, 0, 0, 0.1)",
+	},
+	councilListIcon: {
+		marginRight: 12,
+	},
+	councilListText: {
+		fontSize: 16,
+		flex: 1,
 	},
 });
