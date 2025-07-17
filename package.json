@@ -10,7 +10,8 @@
 		"lint": "expo lint",
 		"start": "expo start --no-dev --minify",
 		"check:fix": "biome check --write",
-		"check-types": "tsc --noEmit"
+		"check-types": "tsc --noEmit",
+		"build:simulator:ios": "eas build --profile ios-simulator --platform ios"
 	},
 	"dependencies": {
 		"@expo/vector-icons": "^14.1.0",
