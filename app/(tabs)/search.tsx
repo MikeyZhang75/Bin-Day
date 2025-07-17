@@ -151,12 +151,18 @@ export default function SearchScreen() {
 					component.types.includes("administrative_area_level_2"),
 				);
 
-				if (council && isValidCouncilName(council.long_name)) {
-					setSelectedCouncil(council.long_name);
-					setUnsupportedCouncil(null);
+				if (council?.long_name) {
+					if (isValidCouncilName(council.long_name)) {
+						setSelectedCouncil(council.long_name);
+						setUnsupportedCouncil(null);
+					} else {
+						setSelectedCouncil(null);
+						setUnsupportedCouncil(council.long_name);
+					}
 				} else {
+					// No council found in address components
 					setSelectedCouncil(null);
-					setUnsupportedCouncil(council?.long_name || null);
+					setUnsupportedCouncil(null);
 				}
 			} else {
 				// Fallback to prediction description
@@ -324,7 +330,12 @@ export default function SearchScreen() {
 								<ThemedText style={styles.selectedLabel}>
 									Selected Address
 								</ThemedText>
-								<Pressable onPress={clearSelectedAddress}>
+								<Pressable
+									onPress={clearSelectedAddress}
+									accessibilityRole="button"
+									accessibilityLabel="Clear selected address"
+									accessibilityHint="Removes the selected address and allows you to search again"
+								>
 									<IconSymbol name="xmark" size={20} color={`${textColor}60`} />
 								</Pressable>
 							</View>
@@ -534,6 +545,9 @@ export default function SearchScreen() {
 									<Pressable
 										style={styles.infoButton}
 										onPress={() => setShowSupportedCouncilsModal(true)}
+										accessibilityRole="button"
+										accessibilityLabel="View list of supported councils"
+										accessibilityHint="Opens a modal showing all councils supported by this service"
 									>
 										<IconSymbol
 											name="info.circle"
@@ -559,6 +573,8 @@ export default function SearchScreen() {
 					animationType="slide"
 					transparent={true}
 					onRequestClose={() => setShowSupportedCouncilsModal(false)}
+					accessible={true}
+					accessibilityViewIsModal={true}
 				>
 					<View style={styles.modalOverlay}>
 						<View
@@ -574,6 +590,9 @@ export default function SearchScreen() {
 								<Pressable
 									onPress={() => setShowSupportedCouncilsModal(false)}
 									style={styles.modalCloseButton}
+									accessibilityRole="button"
+									accessibilityLabel="Close modal"
+									accessibilityHint="Closes the supported councils list"
 								>
 									<IconSymbol
 										name="xmark.circle.fill"
@@ -587,7 +606,13 @@ export default function SearchScreen() {
 									The following councils are currently supported:
 								</ThemedText>
 								{Object.values(COUNCIL_NAMES).map((council) => (
-									<View key={council} style={styles.councilListItem}>
+									<View
+										key={council}
+										style={[
+											styles.councilListItem,
+											{ borderBottomColor: `${borderColor}20` },
+										]}
+									>
 										<IconSymbol
 											name="checkmark.circle.fill"
 											size={20}
@@ -900,7 +925,6 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		paddingVertical: 12,
 		borderBottomWidth: 1,
-		borderBottomColor: "rgba(0, 0, 0, 0.1)",
 	},
 	councilListIcon: {
 		marginRight: 12,
