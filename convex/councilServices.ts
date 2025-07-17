@@ -7,6 +7,7 @@ import { fetchBallaratData } from "./councils/ballarat";
 import { fetchBanyuleData } from "./councils/banyule";
 import { fetchBawBawShireData } from "./councils/bawBawShire";
 import { fetchBaysideData } from "./councils/bayside";
+import { fetchCampaspeData } from "./councils/campaspe";
 import { fetchGannawarraData } from "./councils/gannawarra";
 import { fetchMonashData } from "./councils/monash";
 
@@ -37,6 +38,7 @@ const councilHandlers: Record<
 	[COUNCIL_NAMES.GANNAWARRA_SHIRE]: fetchGannawarraData,
 	[COUNCIL_NAMES.BAW_BAW_SHIRE]: fetchBawBawShireData,
 	[COUNCIL_NAMES.BAYSIDE_CITY]: fetchBaysideData,
+	[COUNCIL_NAMES.CAMPASPE_SHIRE]: fetchCampaspeData,
 };
 
 export const getCouncilData = action({
@@ -49,6 +51,7 @@ export const getCouncilData = action({
 			v.literal(COUNCIL_NAMES.GANNAWARRA_SHIRE),
 			v.literal(COUNCIL_NAMES.BAW_BAW_SHIRE),
 			v.literal(COUNCIL_NAMES.BAYSIDE_CITY),
+			v.literal(COUNCIL_NAMES.CAMPASPE_SHIRE),
 		),
 		placeDetails: v.object({
 			address_components: v.array(
