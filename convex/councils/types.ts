@@ -9,6 +9,7 @@ export const COUNCIL_NAMES = {
 	BAW_BAW_SHIRE: "Baw Baw Shire",
 	BAYSIDE_CITY: "Bayside City",
 	CAMPASPE_SHIRE: "Campaspe Shire",
+	GREATER_DANDENONG: "Greater Dandenong City",
 } as const;
 
 export type CouncilName = (typeof COUNCIL_NAMES)[keyof typeof COUNCIL_NAMES];

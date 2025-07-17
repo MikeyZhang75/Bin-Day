@@ -90,6 +90,7 @@ The app uses Expo Router's file-based routing:
      - `councils/bawBawShire.ts` - Baw Baw Shire council specific implementation
      - `councils/bayside.ts` - Bayside City council specific implementation
      - `councils/campaspe.ts` - Campaspe Shire council specific implementation
+     - `councils/dandenong.ts` - Greater Dandenong City council specific implementation
      - `googlePlaces.ts` - Google Places API integration
    - Use Convex React hooks for data fetching
 
@@ -110,6 +111,7 @@ The app uses Expo Router's file-based routing:
    - Baw Baw Shire waste collection API
    - Bayside City waste collection API
    - Campaspe Shire waste collection API
+   - Greater Dandenong City waste collection API
    - Extensible pattern for adding more councils
 
 ### Utilities
@@ -137,6 +139,7 @@ The app uses Expo Router's file-based routing:
   - Baw Baw Shire
   - Bayside City
   - Campaspe Shire
+  - Greater Dandenong City
 - Fetches waste collection dates for:
   - Landfill waste
   - Recycling
