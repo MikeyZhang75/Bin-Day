@@ -1,5 +1,9 @@
-import { cleanEnv, str } from "envalid";
+import { z } from "zod";
 
-export const env = cleanEnv(process.env, {
-	EXPO_PUBLIC_CONVEX_URL: str(),
+const envSchema = z.object({
+	EXPO_PUBLIC_CONVEX_URL: z.url(),
+});
+
+export const env = envSchema.parse({
+	EXPO_PUBLIC_CONVEX_URL: process.env.EXPO_PUBLIC_CONVEX_URL,
 });
