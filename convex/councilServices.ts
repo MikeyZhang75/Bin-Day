@@ -5,6 +5,7 @@ import { fetchAlpineShireData } from "./councils/alpineShire";
 import { fetchBallaratData } from "./councils/ballarat";
 import { fetchBanyuleData } from "./councils/banyule";
 import { fetchBawBawShireData } from "./councils/bawBawShire";
+import { fetchBaysideData } from "./councils/bayside";
 import { fetchGannawarraData } from "./councils/gannawarra";
 import { fetchMonashData } from "./councils/monash";
 
@@ -34,6 +35,7 @@ const councilHandlers: Record<
 	"Banyule City": fetchBanyuleData,
 	"Gannawarra Shire": fetchGannawarraData,
 	"Baw Baw Shire": fetchBawBawShireData,
+	"Bayside City": fetchBaysideData,
 };
 
 export const getCouncilData = action({
