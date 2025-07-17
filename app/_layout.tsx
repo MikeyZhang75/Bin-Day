@@ -8,7 +8,6 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
-
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { env } from "@/lib/env";
 
