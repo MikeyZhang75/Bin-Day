@@ -5,6 +5,7 @@ import {
 } from "@/lib/addressExtractor";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../councilServices";
+import { COUNCIL_NAMES } from "../councils";
 
 type FormResponse = {
 	name: string;
@@ -444,7 +445,10 @@ function parseWasteInfoResponse(data: WasteInfoResponse): WasteCollectionDates {
 
 export async function fetchBawBawShireData(placeDetails: GooglePlaceDetails) {
 	const addressComponents = extractAddressComponents(placeDetails);
-	const searchQuery = getSearchAddress(addressComponents, "Baw Baw Shire");
+	const searchQuery = getSearchAddress(
+		addressComponents,
+		COUNCIL_NAMES.BAW_BAW_SHIRE,
+	);
 
 	try {
 		// Step 1: Get session and waste module ID
