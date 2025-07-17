@@ -340,7 +340,10 @@ export async function fetchCampaspeData(placeDetails: GooglePlaceDetails) {
 			wasteModuleId,
 		);
 
-		// Step 5: Search for the selected address
+		// Search directly with formatted address - no need for suggestions
+		// as Google Places provides well-formatted addresses
+
+		// Step 3: Search for the selected address
 		const wasteInfo = await searchAddress(
 			sessionId,
 			formTemplateId,
