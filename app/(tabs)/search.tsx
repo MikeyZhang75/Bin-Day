@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	Alert,
 	FlatList,
@@ -6,6 +6,7 @@ import {
 	Platform,
 	Pressable,
 	SafeAreaView,
+	ScrollView,
 	StyleSheet,
 	TextInput,
 	TouchableOpacity,
@@ -14,12 +15,18 @@ import {
 import "react-native-get-random-values";
 import { useAction } from "convex/react";
 import { v4 as uuidv4 } from "uuid";
+import { SwipeableModal } from "@/components/SwipeableModal";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { UnsupportedCouncilCard } from "@/components/UnsupportedCouncilCard";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { api } from "@/convex/_generated/api";
 import type { CouncilData } from "@/convex/councilServices";
-import { type CouncilName, isValidCouncilName } from "@/convex/councils";
+import {
+	COUNCIL_NAMES,
+	type CouncilName,
+	isValidCouncilName,
+} from "@/convex/councils";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import type {
 	GooglePlaceDetails,
@@ -43,6 +50,9 @@ export default function SearchScreen() {
 	const [selectedCouncil, setSelectedCouncil] = useState<CouncilName | null>(
 		null,
 	);
+	const [unsupportedCouncil, setUnsupportedCouncil] = useState<string | null>(
+		null,
+	);
 	const [selectedPlaceDetails, setSelectedPlaceDetails] =
 		useState<GooglePlaceDetails | null>(null);
 	const [councilData, setCouncilData] = useState<CouncilData | null>(null);
@@ -51,6 +61,8 @@ export default function SearchScreen() {
 	const [searchResults, setSearchResults] = useState<GooglePrediction[]>([]);
 	const [sessionToken, setSessionToken] = useState<string>(uuidv4());
 	const [showResults, setShowResults] = useState(false);
+	const [showSupportedCouncilsModal, setShowSupportedCouncilsModal] =
+		useState(false);
 	const inputRef = useRef<TextInput>(null);
 
 	// Theme colors
@@ -62,6 +74,9 @@ export default function SearchScreen() {
 		{ light: "#f8f8f8", dark: "#1a1a1a" },
 		"text",
 	);
+
+	// Memoize static council list
+	const supportedCouncilsList = useMemo(() => Object.values(COUNCIL_NAMES), []);
 
 	// Convex actions
 	const autocomplete = useAction(api.googlePlaces.autocomplete);
@@ -140,16 +155,25 @@ export default function SearchScreen() {
 					component.types.includes("administrative_area_level_2"),
 				);
 
-				if (council && isValidCouncilName(council.long_name)) {
-					setSelectedCouncil(council.long_name);
+				if (council?.long_name) {
+					if (isValidCouncilName(council.long_name)) {
+						setSelectedCouncil(council.long_name);
+						setUnsupportedCouncil(null);
+					} else {
+						setSelectedCouncil(null);
+						setUnsupportedCouncil(council.long_name);
+					}
 				} else {
+					// No council found in address components
 					setSelectedCouncil(null);
+					setUnsupportedCouncil(null);
 				}
 			} else {
 				// Fallback to prediction description
 				setSelectedAddress(prediction.description);
 				setSelectedPlaceDetails(null);
 				setSelectedCouncil(null);
+				setUnsupportedCouncil(null);
 			}
 
 			setSearchResults([]);
@@ -164,6 +188,7 @@ export default function SearchScreen() {
 			setSelectedAddress(prediction.description);
 			setSelectedPlaceDetails(null);
 			setSelectedCouncil(null);
+			setUnsupportedCouncil(null);
 			setSearchResults([]);
 			setSearchQuery("");
 			setShowResults(false);
@@ -182,6 +207,7 @@ export default function SearchScreen() {
 		setSelectedAddress(null);
 		setSelectedPlaceDetails(null);
 		setSelectedCouncil(null);
+		setUnsupportedCouncil(null);
 		setCouncilData(null);
 		inputRef.current?.focus();
 	};
@@ -308,7 +334,12 @@ export default function SearchScreen() {
 								<ThemedText style={styles.selectedLabel}>
 									Selected Address
 								</ThemedText>
-								<Pressable onPress={clearSelectedAddress}>
+								<Pressable
+									onPress={clearSelectedAddress}
+									accessibilityRole="button"
+									accessibilityLabel="Clear selected address"
+									accessibilityHint="Removes the selected address and allows you to search again"
+								>
 									<IconSymbol name="xmark" size={20} color={`${textColor}60`} />
 								</Pressable>
 							</View>
@@ -488,8 +519,76 @@ export default function SearchScreen() {
 								</View>
 							</View>
 						)}
+
+						{/* Unsupported Council Card */}
+						{unsupportedCouncil && !selectedCouncil && (
+							<UnsupportedCouncilCard
+								councilName={unsupportedCouncil}
+								onViewSupportedCouncils={() =>
+									setShowSupportedCouncilsModal(true)
+								}
+								backgroundColor={cardBgColor}
+								borderColor={borderColor}
+								tintColor={tintColor}
+							/>
+						)}
 					</View>
 				)}
+
+				{/* Supported Councils Modal */}
+				<SwipeableModal
+					visible={showSupportedCouncilsModal}
+					onClose={() => setShowSupportedCouncilsModal(false)}
+					accessible={true}
+					accessibilityViewIsModal={true}
+				>
+					{(closeModal) => (
+						<>
+							<View style={styles.modalHeader}>
+								<ThemedText style={styles.modalTitle}>
+									Supported Councils
+								</ThemedText>
+								<Pressable
+									onPress={closeModal}
+									style={styles.modalCloseButton}
+									accessibilityRole="button"
+									accessibilityLabel="Close modal"
+									accessibilityHint="Closes the supported councils list"
+								>
+									<IconSymbol
+										name="xmark.circle.fill"
+										size={24}
+										color={`${textColor}60`}
+									/>
+								</Pressable>
+							</View>
+							<ScrollView style={styles.modalScroll}>
+								<ThemedText style={styles.modalDescription}>
+									The following councils are currently supported:
+								</ThemedText>
+								{supportedCouncilsList.map((council) => (
+									<View
+										key={council}
+										style={[
+											styles.councilListItem,
+											{ borderBottomColor: `${borderColor}20` },
+										]}
+									>
+										<IconSymbol
+											name="checkmark.circle.fill"
+											size={20}
+											color={tintColor}
+											style={styles.councilListIcon}
+										/>
+										<ThemedText style={styles.councilListText}>
+											{council}
+										</ThemedText>
+									</View>
+								))}
+							</ScrollView>
+						</>
+					)}
+				</SwipeableModal>
 
 				{/* Empty State */}
 				{!selectedAddress && searchQuery.length === 0 && (
@@ -718,5 +817,39 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		opacity: 0.4,
 		textAlign: "center",
+	},
+	modalHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginBottom: 20,
+	},
+	modalTitle: {
+		fontSize: 24,
+		fontWeight: "700",
+	},
+	modalCloseButton: {
+		padding: 4,
+	},
+	modalScroll: {
+		marginBottom: 20,
+	},
+	modalDescription: {
+		fontSize: 16,
+		opacity: 0.7,
+		marginBottom: 20,
+	},
+	councilListItem: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingVertical: 12,
+		borderBottomWidth: 1,
+	},
+	councilListIcon: {
+		marginRight: 12,
+	},
+	councilListText: {
+		fontSize: 16,
+		flex: 1,
 	},
 });
