@@ -80,7 +80,7 @@ The app uses Expo Router's file-based routing:
    - Backend functions in `convex/` directory:
      - `councilServices.ts` - Council data fetching logic with WasteCollectionDates type
      - `councils/index.ts` - Central export file for council-related modules
-    - `councils/types.ts` - Council types, constants, and validation utilities
+     - `councils/types.ts` - Council types, constants, and validation utilities
      - `councils/errors.ts` - Standardized error classes and utilities for council implementations
      - `councils/monash.ts` - Monash council specific implementation
      - `councils/alpineShire.ts` - Alpine Shire council specific implementation
@@ -89,7 +89,7 @@ The app uses Expo Router's file-based routing:
      - `councils/gannawarra.ts` - Gannawarra Shire council specific implementation
      - `councils/bawBawShire.ts` - Baw Baw Shire council specific implementation
      - `councils/bayside.ts` - Bayside City council specific implementation
-    - `councils/campaspe.ts` - Campaspe Shire council specific implementation
+     - `councils/campaspe.ts` - Campaspe Shire council specific implementation
      - `googlePlaces.ts` - Google Places API integration
    - Use Convex React hooks for data fetching
 
