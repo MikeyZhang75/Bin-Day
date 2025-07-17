@@ -31,6 +31,27 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run type check
+        id: typecheck
+        run: |
+          echo "Running type check..."
+          if bun run check-types; then
+            echo "typecheck_passed=true" >> $GITHUB_OUTPUT
+            echo "✅ Type check passed"
+          else
+            echo "typecheck_passed=false" >> $GITHUB_OUTPUT
+            echo "❌ Type check failed"
+          fi
+        continue-on-error: true
+
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@beta
@@ -42,12 +63,15 @@ jobs:
 
           # Direct prompt for automated review (no @claude mention needed)
           direct_prompt: |
+            Type check status: ${{ steps.typecheck.outputs.typecheck_passed == 'true' && '✅ Passed' || '❌ Failed' }}
+            
             Please review this pull request and provide feedback on:
             - Code quality and best practices
             - Potential bugs or issues
             - Performance considerations
             - Security concerns
             - Test coverage
+            - TypeScript type safety (if type check failed, please run `bun run check-types` to see the errors)
 
             Be constructive and helpful in your feedback.
 
