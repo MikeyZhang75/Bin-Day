@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a React Native Expo application called "bin-day", built with Expo Router (v5), React Native 0.79.5, and TypeScript. The app uses Convex as a backend service and follows Expo's file-based routing pattern.
+This is a React Native Expo application called "bin-day" that helps users find waste collection information for their addresses. Built with Expo Router (v5), React Native 0.79.5, and TypeScript, the app uses Convex as a backend service and follows Expo's file-based routing pattern.
 
 ## Development Commands
 
@@ -22,6 +22,8 @@ Always use Bun for all npm-related commands (as specified in user's global CLAUD
 - `bun run ios` - Start on iOS simulator
 - `bun run web` - Start in web browser
 - `bun run lint` - Run ESLint checks
+- `bun run check:fix` - Run Biome format and lint with automatic fixes
+- `bun run check-types` - Run TypeScript type checking
 - `bun run reset-project` - Move starter code to app-example and create blank app directory
 
 ### Code Quality
@@ -32,7 +34,7 @@ The project uses both ESLint and Biome for code quality:
 2. **Biome**: `bunx @biomejs/biome check .` - For formatting and additional linting
    - Format: `bunx @biomejs/biome format --write .`
    - Lint: `bunx @biomejs/biome lint .`
-   - Both: `bunx @biomejs/biome check --write .`
+   - Both: `bunx @biomejs/biome check --write .` or `bun run check:fix`
 
 Note: Biome is configured with tab indentation and double quotes for strings.
 
@@ -42,10 +44,11 @@ Note: Biome is configured with tab indentation and double quotes for strings.
 
 The app uses Expo Router's file-based routing:
 
-- `app/_layout.tsx` - Root layout with theme provider and font loading
-- `app/(tabs)/_layout.tsx` - Tab navigation layout with Home and Explore tabs
+- `app/_layout.tsx` - Root layout with theme provider, font loading, and Convex provider
+- `app/(tabs)/_layout.tsx` - Tab navigation layout with Home, Explore, and Search tabs
 - `app/(tabs)/index.tsx` - Home tab screen
 - `app/(tabs)/explore.tsx` - Explore tab screen
+- `app/(tabs)/search.tsx` - Search tab screen with Google Places integration
 - `app/+not-found.tsx` - 404 screen
 
 ### Key Architectural Patterns
@@ -75,8 +78,51 @@ The app uses Expo Router's file-based routing:
 
 5. **Convex Backend**
    - Generated types in `convex/_generated/`
-   - Backend functions should be added to `convex/` directory
+   - Backend functions in `convex/` directory:
+     - `councilServices.ts` - Council data fetching logic
+     - `councils/monash.ts` - Monash council specific implementation
+     - `googlePlaces.ts` - Google Places API integration
    - Use Convex React hooks for data fetching
+
+### External API Integrations
+
+1. **Google Places API**
+
+   - Autocomplete for address search
+   - Place details fetching
+   - Configured in `convex/googlePlaces.ts`
+
+2. **Council APIs**
+   - Monash Council waste collection API
+   - Extensible pattern for adding more councils
+
+### Utilities
+
+- `lib/addressExtractor.ts` - Extract address components from Google Places data
+- `lib/distance.ts` - Calculate distances between coordinates
+- `lib/env.ts` - Environment variable validation with envalid
+
+## App Features
+
+### Address Search
+
+- Uses Google Places Autocomplete API
+- Filters to Australian addresses only
+- Extracts suburb and address details
+
+### Council Services Integration
+
+- Currently supports City of Monash
+- Fetches waste collection dates for:
+  - Landfill waste
+  - Recycling
+  - Food & garden waste
+  - Hard waste
+
+### Type Definitions
+
+- Google Places types in `types/google-places.ts`
+- Council service types in `types/council.ts`
 
 ## Development Guidelines
 
@@ -90,6 +136,11 @@ The app uses Expo Router's file-based routing:
 
 5. **Testing**: No test framework is currently configured. If tests are needed, suggest setting up Jest with React Native Testing Library.
 
+6. **Environment Variables**:
+   - Use `envalid` for validation in `lib/env.ts`
+   - Prefix client-side variables with `EXPO_PUBLIC_`
+   - Store sensitive API keys in Convex environment variables
+
 ## Environment Setup
 
 The project includes:
@@ -100,3 +151,6 @@ The project includes:
 - TypeScript 5.8.3
 - Convex 1.25.2
 - Biome 2.1.1 (for formatting/linting)
+- Luxon 3.5.0 (for date/time handling)
+- envalid 8.0.0 (for environment validation)
+- uuid 11.0.5 (for generating unique identifiers)
