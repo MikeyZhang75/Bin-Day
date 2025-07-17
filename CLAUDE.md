@@ -85,6 +85,7 @@ The app uses Expo Router's file-based routing:
      - `councils/banyule.ts` - Banyule City council specific implementation
      - `councils/gannawarra.ts` - Gannawarra Shire council specific implementation
      - `councils/bawBawShire.ts` - Baw Baw Shire council specific implementation
+     - `councils/bayside.ts` - Bayside City council specific implementation
      - `googlePlaces.ts` - Google Places API integration
    - Use Convex React hooks for data fetching
 
@@ -103,6 +104,7 @@ The app uses Expo Router's file-based routing:
    - Banyule City waste collection API
    - Gannawarra Shire waste collection API
    - Baw Baw Shire waste collection API
+   - Bayside City waste collection API
    - Extensible pattern for adding more councils
 
 ### Utilities
@@ -128,6 +130,7 @@ The app uses Expo Router's file-based routing:
   - City of Banyule
   - Gannawarra Shire
   - Baw Baw Shire
+  - Bayside City
 - Fetches waste collection dates for:
   - Landfill waste
   - Recycling
