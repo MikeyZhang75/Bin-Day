@@ -87,19 +87,19 @@ After starting the development server, you can:
 ```
 bin-day/
 ├── app/                    # Expo Router screens and layouts
-│   ├── (tabs)/            # Tab navigation screens
-│   ├── _layout.tsx        # Root layout
-│   └── +not-found.tsx     # 404 screen
-├── components/            # Reusable React components
-│   └── ui/               # Platform-specific UI components
-├── convex/               # Backend functions
-│   ├── councils/         # Council-specific implementations
-│   └── _generated/       # Auto-generated Convex types
-├── constants/            # App constants and theme colors
-├── hooks/                # Custom React hooks
-├── lib/                  # Utility functions
-├── types/                # TypeScript type definitions
-└── CLAUDE.md            # AI assistant instructions
+│   ├── (tabs)/             # Tab navigation screens
+│   ├── _layout.tsx         # Root layout
+│   └── +not-found.tsx      # 404 screen
+├── components/             # Reusable React components
+│   └── ui/                 # Platform-specific UI components
+├── convex/                 # Backend functions
+│   ├── councils/           # Council-specific implementations
+│   └── _generated/         # Auto-generated Convex types
+├── constants/              # App constants and theme colors
+├── hooks/                  # Custom React hooks
+├── lib/                    # Utility functions
+├── types/                  # TypeScript type definitions
+└── .claude/               # AI assistant configuration
 ```
 
 ### Available Scripts
