@@ -391,35 +391,6 @@ function parseWasteInfoResponse(data: SearchResponse): WasteCollectionDates {
 	return dates;
 }
 
-function findBestMatch(
-	suggestions: string[],
-	targetAddress: string,
-): string | null {
-	if (suggestions.length === 0) return null;
-
-	// Normalize the target address for comparison
-	const normalizedTarget = targetAddress.toLowerCase().trim();
-
-	// First, try to find an exact match
-	for (const suggestion of suggestions) {
-		if (suggestion.toLowerCase().trim() === normalizedTarget) {
-			return suggestion;
-		}
-	}
-
-	// If no exact match, find the suggestion that contains all parts of the target
-	const targetParts = normalizedTarget.split(/\s+/);
-	for (const suggestion of suggestions) {
-		const suggestionLower = suggestion.toLowerCase();
-		if (targetParts.every((part) => suggestionLower.includes(part))) {
-			return suggestion;
-		}
-	}
-
-	// If still no match, return the first suggestion
-	return suggestions[0];
-}
-
 export async function fetchCampaspeData(placeDetails: GooglePlaceDetails) {
 	const addressComponents = extractAddressComponents(placeDetails);
 	const searchQuery = getSearchAddress(
@@ -438,32 +409,18 @@ export async function fetchCampaspeData(placeDetails: GooglePlaceDetails) {
 		);
 
 		// Step 3: Get address suggestions
-		// Try with just the house number first
-		const houseNumber = searchQuery.split(" ")[0];
-		let suggestions = await getAddressSuggestions(
+		const suggestions = await getAddressSuggestions(
 			sessionId,
 			comboTemplateId,
-			houseNumber,
+			searchQuery,
 		);
 
-		// If no suggestions, try with the full address
-		if (suggestions.length === 0) {
-			suggestions = await getAddressSuggestions(
-				sessionId,
-				comboTemplateId,
-				searchQuery,
-			);
-		}
-
 		if (suggestions.length === 0) {
 			throw new AddressNotFoundError();
 		}
 
-		// Step 4: Find the best matching address
-		const selectedAddress = findBestMatch(suggestions, searchQuery);
-		if (!selectedAddress) {
-			throw new AddressNotFoundError();
-		}
+		// Step 4: Use the first suggestion
+		const selectedAddress = suggestions[0];
 
 		// Step 5: Search for the selected address
 		const wasteInfo = await searchAddress(
