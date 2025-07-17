@@ -1,6 +1,7 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 
 export interface ExtractedAddressComponents {
+	subpremise: string; // 1
 	streetNumber: string; //26A
 	route: string; // Ormond Road
 	locality: string; // Clayton
@@ -31,6 +32,7 @@ export function extractAddressComponents(
 	};
 
 	return {
+		subpremise: findComponent(["subpremise"]),
 		streetNumber: findComponent(["street_number"]),
 		route: findComponent(["route"]),
 		locality: findComponent(["locality"]),
@@ -44,4 +46,18 @@ export function extractAddressComponents(
 			lng: placeDetails.geometry.location.lng,
 		},
 	};
+}
+
+/**
+ * Gets a formatted address string for search queries
+ * @param components - Extracted address components
+ * @returns Formatted address string for search queries (without state/postcode)
+ * @example // Returns "1/26A Ormond Road, Clayton"
+ */
+export function getSearchAddress(
+	components: ExtractedAddressComponents,
+): string {
+	return components.subpremise
+		? `${components.subpremise}/${components.streetNumber} ${components.route} ${components.locality}`
+		: `${components.streetNumber} ${components.route} ${components.locality}`.trim();
 }

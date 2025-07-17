@@ -1,5 +1,8 @@
 import { DateTime } from "luxon";
-import { extractAddressComponents } from "@/lib/addressExtractor";
+import {
+	extractAddressComponents,
+	getSearchAddress,
+} from "@/lib/addressExtractor";
 import { calculateDistance } from "@/lib/distance";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../councilServices";
@@ -153,8 +156,8 @@ async function fetchWasteServices(geolocationId: string) {
 export async function fetchMonashData(placeDetails: GooglePlaceDetails) {
 	// Extract address components using the utility function
 	const addressComponents = extractAddressComponents(placeDetails);
-	const searchQuery =
-		`${addressComponents.streetNumber} ${addressComponents.route} ${addressComponents.locality}`.trim();
+	// Construct search query, only including subpremise if it exists
+	const searchQuery = getSearchAddress(addressComponents);
 
 	try {
 		// Search for the address
