@@ -3,6 +3,8 @@ import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import { action } from "./_generated/server";
 import { fetchAlpineShireData } from "./councils/alpineShire";
 import { fetchBallaratData } from "./councils/ballarat";
+import { fetchBanyuleData } from "./councils/banyule";
+import { fetchGannawarraData } from "./councils/gannawarra";
 import { fetchMonashData } from "./councils/monash";
 
 export type WasteCollectionDates = {
@@ -27,6 +29,8 @@ const councilHandlers: Record<
 	"City of Monash": fetchMonashData,
 	"Alpine Shire": fetchAlpineShireData,
 	"City of Ballarat": fetchBallaratData,
+	"Banyule City": fetchBanyuleData,
+	"Gannawarra Shire": fetchGannawarraData,
 };
 
 export const getCouncilData = action({

@@ -7,7 +7,7 @@ import { calculateDistance } from "@/lib/distance";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../councilServices";
 
-type MonashApiResponse = {
+type BanyuleApiResponse = {
 	Items: {
 		Id: string;
 		AddressSingleLine: string;
@@ -27,7 +27,7 @@ type WasteServicesResponse = {
 };
 
 function parseDateToUnixTimestamp(dateString: string): number | null {
-	// Parse date string like "Fri 25/7/2025" to Unix timestamp
+	// Parse date string like "Wed 23/7/2025" to Unix timestamp
 	const match = dateString.match(/\w+\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/);
 	if (!match) return null;
 
@@ -59,45 +59,40 @@ function parseWasteCollectionDates(html: string): WasteCollectionDates {
 		hardWaste: null,
 	};
 
-	// Parse Landfill Waste date
-	const landfillMatch = html.match(
-		/general-waste[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
+	// Parse Rubbish (Landfill Waste) date
+	// Banyule uses "general-waste" class and "Rubbish" as the title
+	const rubbishMatch = html.match(
+		/general-waste[\s\S]*?<h3>Rubbish<\/h3>[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
 	);
-	if (landfillMatch) {
-		dates.landfillWaste = parseDateToUnixTimestamp(landfillMatch[1].trim());
+	if (rubbishMatch) {
+		dates.landfillWaste = parseDateToUnixTimestamp(rubbishMatch[1].trim());
 	}
 
 	// Parse Recycling date
 	const recyclingMatch = html.match(
-		/recycling[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
+		/recycling[\s\S]*?<h3>Recycling<\/h3>[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
 	);
 	if (recyclingMatch) {
 		dates.recycling = parseDateToUnixTimestamp(recyclingMatch[1].trim());
 	}
 
-	// Parse Food and Garden Waste date
-	const foodGardenMatch = html.match(
-		/green-waste[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
+	// Parse FOGO (Food Organics and Garden Organics) date
+	// Banyule uses "green-waste" class and "FOGO" as the title
+	const fogoMatch = html.match(
+		/green-waste[\s\S]*?<h3>FOGO<\/h3>[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
 	);
-	if (foodGardenMatch) {
-		dates.foodAndGardenWaste = parseDateToUnixTimestamp(
-			foodGardenMatch[1].trim(),
-		);
+	if (fogoMatch) {
+		dates.foodAndGardenWaste = parseDateToUnixTimestamp(fogoMatch[1].trim());
 	}
 
-	// Parse Hard Waste date
-	const hardWasteMatch = html.match(
-		/one-off-service[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
-	);
-	if (hardWasteMatch) {
-		dates.hardWaste = parseDateToUnixTimestamp(hardWasteMatch[1].trim());
-	}
+	// Banyule doesn't typically show hard waste in regular schedule
+	// It's usually booked separately
 
 	return dates;
 }
 
-async function searchMonashAddress(searchQuery: string) {
-	const url = `https://www.monash.vic.gov.au/api/v1/myarea/search?keywords=${encodeURIComponent(searchQuery)}`;
+async function searchBanyuleAddress(searchQuery: string) {
+	const url = `https://www.banyule.vic.gov.au/api/v1/myarea/search?keywords=${encodeURIComponent(searchQuery)}`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -105,14 +100,19 @@ async function searchMonashAddress(searchQuery: string) {
 			"User-Agent":
 				"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
 			Accept: "text/plain, */*; q=0.01",
-			"Accept-Language": "en-US,en;q=0.9",
-			"Accept-Encoding": "gzip, deflate, br",
-			Referer: "https://www.monash.vic.gov.au/",
-			Origin: "https://www.monash.vic.gov.au",
-			"X-Requested-With": "XMLHttpRequest",
-			"Sec-Fetch-Dest": "empty",
-			"Sec-Fetch-Mode": "cors",
-			"Sec-Fetch-Site": "same-origin",
+			"Accept-Encoding": "gzip, deflate, br, zstd",
+			"sec-ch-ua-platform": '"macOS"',
+			"x-requested-with": "XMLHttpRequest",
+			"sec-ch-ua":
+				'"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+			"sec-ch-ua-mobile": "?0",
+			"sec-fetch-site": "same-origin",
+			"sec-fetch-mode": "cors",
+			"sec-fetch-dest": "empty",
+			referer:
+				"https://www.banyule.vic.gov.au/Waste-environment/Bin-collection",
+			"accept-language": "en-GB,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6",
+			priority: "u=1, i",
 		},
 	});
 
@@ -120,13 +120,13 @@ async function searchMonashAddress(searchQuery: string) {
 		throw new Error(`HTTP error! status: ${response.status}`);
 	}
 
-	const data = (await response.json()) as MonashApiResponse;
+	const data = (await response.json()) as BanyuleApiResponse;
 
 	return data;
 }
 
 async function fetchWasteServices(geolocationId: string) {
-	const wasteServicesUrl = `https://www.monash.vic.gov.au/ocapi/Public/myarea/wasteservices?geolocationid=${geolocationId}&ocsvclang=en-AU`;
+	const wasteServicesUrl = `https://www.banyule.vic.gov.au/ocapi/Public/myarea/wasteservices?geolocationid=${geolocationId}&ocsvclang=en-AU/Waste-environment/Bin-collection`;
 
 	const wasteServicesResponse = await fetch(wasteServicesUrl, {
 		method: "GET",
@@ -144,7 +144,7 @@ async function fetchWasteServices(geolocationId: string) {
 			"sec-fetch-mode": "cors",
 			"sec-fetch-dest": "empty",
 			referer:
-				"https://www.monash.vic.gov.au/Waste-Sustainability/Bin-Collection/When-we-collect-your-bins",
+				"https://www.banyule.vic.gov.au/Waste-environment/Bin-collection",
 			"accept-language": "en-GB,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6",
 			priority: "u=1, i",
 		},
@@ -156,7 +156,7 @@ async function fetchWasteServices(geolocationId: string) {
 	return wasteServicesData;
 }
 
-export async function fetchMonashData(placeDetails: GooglePlaceDetails) {
+export async function fetchBanyuleData(placeDetails: GooglePlaceDetails) {
 	// Extract address components using the utility function
 	const addressComponents = extractAddressComponents(placeDetails);
 	// Construct search query, only including subpremise if it exists
@@ -164,7 +164,7 @@ export async function fetchMonashData(placeDetails: GooglePlaceDetails) {
 
 	try {
 		// Search for the address
-		const addressData = await searchMonashAddress(searchQuery);
+		const addressData = await searchBanyuleAddress(searchQuery);
 
 		// Extract the ID from the response
 		if (!addressData || addressData.Items.length === 0) {
@@ -206,7 +206,7 @@ export async function fetchMonashData(placeDetails: GooglePlaceDetails) {
 
 		return wasteCollectionDates;
 	} catch (error) {
-		console.error("Monash API error:", error);
-		throw new Error("Failed to fetch data from Monash council");
+		console.error("Banyule API error:", error);
+		throw new Error("Failed to fetch data from Banyule council");
 	}
 }
