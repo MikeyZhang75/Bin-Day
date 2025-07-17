@@ -47,16 +47,6 @@ type FormResponse = {
 	}[];
 };
 
-type ComboContentsResponse = {
-	header: {
-		warnings: string[];
-		authenticationRequired: boolean;
-	};
-	items: {
-		key: string;
-	}[];
-};
-
 type SearchResponse = {
 	header: {
 		warnings: string[];
@@ -150,7 +140,7 @@ async function getSession(): Promise<{
 async function getFormTemplateId(
 	sessionId: string,
 	wasteModuleId: string,
-): Promise<{ formTemplateId: string; comboTemplateId: string }> {
+): Promise<{ formTemplateId: string }> {
 	const response = await fetch(
 		`https://campaspe.spatial.t1cloud.com/spatial/IntraMaps/ApplicationEngine/Modules/?IntraMapsSession=${sessionId}`,
 		{
@@ -195,65 +185,7 @@ async function getFormTemplateId(
 		throw new InvalidResponseError("Address form not found");
 	}
 
-	// Find the combo control to get its templateId
-	const comboControl = addressForm.rows[0]?.controls.find(
-		(control) => control.type === "combo",
-	);
-
-	if (!comboControl) {
-		throw new InvalidResponseError("Address combo control not found");
-	}
-
-	return {
-		formTemplateId: addressForm.templateId,
-		comboTemplateId: comboControl.templateId,
-	};
-}
-
-async function getAddressSuggestions(
-	sessionId: string,
-	comboTemplateId: string,
-	query: string,
-): Promise<string[]> {
-	const response = await fetch(
-		`https://campaspe.spatial.t1cloud.com/spatial/IntraMaps/ApplicationEngine/Search/ComboContents?IntraMapsSession=${sessionId}`,
-		{
-			method: "POST",
-			headers: {
-				"User-Agent":
-					"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
-				"Accept-Encoding": "gzip, deflate, br, zstd",
-				"Content-Type": "application/json",
-				"sec-ch-ua-platform": '"macOS"',
-				"x-requested-with": "XMLHttpRequest",
-				"sec-ch-ua":
-					'"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
-				"sec-ch-ua-mobile": "?0",
-				origin: "https://campaspe.spatial.t1cloud.com",
-				"sec-fetch-site": "same-origin",
-				"sec-fetch-mode": "cors",
-				"sec-fetch-dest": "empty",
-				"sec-fetch-storage-access": "active",
-				referer:
-					"https://campaspe.spatial.t1cloud.com/spatial/IntraMaps/ApplicationEngine/frontend/mapbuilder/default.htm?configId=9d473bd9-fbfa-4258-a7fd-297b913b135f&liteConfigId=ca2d5b3c-5654-4055-87a5-243521716da4&title=V2FzdGUlMjBDb2xsZWN0aW9uJTIwTWFw",
-				"accept-language": "en-GB,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6",
-				priority: "u=1, i",
-			},
-			body: JSON.stringify({
-				templateId: comboTemplateId,
-				queryParameter: query,
-				selectionLayersFilter: "d9cf7936-4f30-421e-a2e2-565f7d936cab",
-			}),
-		},
-	);
-
-	if (!response.ok) {
-		throw new CouncilAPIError(COUNCIL_NAMES.CAMPASPE_SHIRE, response.status);
-	}
-
-	const data = await safeJsonParse<ComboContentsResponse>(response);
-
-	return data.items.map((item) => item.key);
+	return { formTemplateId: addressForm.templateId };
 }
 
 async function searchAddress(
@@ -402,31 +334,20 @@ export async function fetchCampaspeData(placeDetails: GooglePlaceDetails) {
 		// Step 1: Get session and waste module ID
 		const { sessionId, wasteModuleId } = await getSession();
 
-		// Step 2: Get form template ID and combo template ID
-		const { formTemplateId, comboTemplateId } = await getFormTemplateId(
+		// Step 2: Get form template ID
+		const { formTemplateId } = await getFormTemplateId(
 			sessionId,
 			wasteModuleId,
 		);
 
-		// Step 3: Get address suggestions
-		const suggestions = await getAddressSuggestions(
-			sessionId,
-			comboTemplateId,
-			searchQuery,
-		);
+		// Search directly with formatted address - no need for suggestions
+		// as Google Places provides well-formatted addresses
 
-		if (suggestions.length === 0) {
-			throw new AddressNotFoundError();
-		}
-
-		// Step 4: Use the first suggestion
-		const selectedAddress = suggestions[0];
-
-		// Step 5: Search for the selected address
+		// Step 3: Search for the address
 		const wasteInfo = await searchAddress(
 			sessionId,
 			formTemplateId,
-			selectedAddress,
+			searchQuery,
 		);
 
 		// Parse and return the waste collection dates
