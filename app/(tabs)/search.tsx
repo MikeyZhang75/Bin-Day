@@ -19,11 +19,17 @@ import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { api } from "@/convex/_generated/api";
 import type { CouncilData } from "@/convex/councilServices";
+import { COUNCIL_NAMES, type CouncilName } from "@/convex/councils";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import type {
 	GooglePlaceDetails,
 	GooglePrediction,
 } from "@/types/googlePlaces";
+
+// Helper function to check if a string is a valid council name
+const isValidCouncilName = (council: string): council is CouncilName => {
+	return Object.values(COUNCIL_NAMES).includes(council as CouncilName);
+};
 
 // Helper function to format Unix timestamp to readable date
 const formatDate = (timestamp: number | null): string => {
@@ -39,7 +45,9 @@ const formatDate = (timestamp: number | null): string => {
 
 export default function SearchScreen() {
 	const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
-	const [selectedCouncil, setSelectedCouncil] = useState<string | null>(null);
+	const [selectedCouncil, setSelectedCouncil] = useState<CouncilName | null>(
+		null,
+	);
 	const [selectedPlaceDetails, setSelectedPlaceDetails] =
 		useState<GooglePlaceDetails | null>(null);
 	const [councilData, setCouncilData] = useState<CouncilData | null>(null);
@@ -137,7 +145,7 @@ export default function SearchScreen() {
 					component.types.includes("administrative_area_level_2"),
 				);
 
-				if (council) {
+				if (council && isValidCouncilName(council.long_name)) {
 					setSelectedCouncil(council.long_name);
 				} else {
 					setSelectedCouncil(null);

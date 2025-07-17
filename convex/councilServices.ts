@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import { action } from "./_generated/server";
+import { COUNCIL_NAMES, type CouncilName } from "./councils";
 import { fetchAlpineShireData } from "./councils/alpineShire";
 import { fetchBallaratData } from "./councils/ballarat";
 import { fetchBanyuleData } from "./councils/banyule";
@@ -26,21 +27,29 @@ export type CouncilData = {
 
 // Council-specific API handlers
 const councilHandlers: Record<
-	string,
+	CouncilName,
 	(placeDetails: GooglePlaceDetails) => Promise<WasteCollectionDates>
 > = {
-	"City of Monash": fetchMonashData,
-	"Alpine Shire": fetchAlpineShireData,
-	"City of Ballarat": fetchBallaratData,
-	"Banyule City": fetchBanyuleData,
-	"Gannawarra Shire": fetchGannawarraData,
-	"Baw Baw Shire": fetchBawBawShireData,
-	"Bayside City": fetchBaysideData,
+	[COUNCIL_NAMES.CITY_OF_MONASH]: fetchMonashData,
+	[COUNCIL_NAMES.ALPINE_SHIRE]: fetchAlpineShireData,
+	[COUNCIL_NAMES.CITY_OF_BALLARAT]: fetchBallaratData,
+	[COUNCIL_NAMES.BANYULE_CITY]: fetchBanyuleData,
+	[COUNCIL_NAMES.GANNAWARRA_SHIRE]: fetchGannawarraData,
+	[COUNCIL_NAMES.BAW_BAW_SHIRE]: fetchBawBawShireData,
+	[COUNCIL_NAMES.BAYSIDE_CITY]: fetchBaysideData,
 };
 
 export const getCouncilData = action({
 	args: {
-		council: v.string(),
+		council: v.union(
+			v.literal(COUNCIL_NAMES.CITY_OF_MONASH),
+			v.literal(COUNCIL_NAMES.ALPINE_SHIRE),
+			v.literal(COUNCIL_NAMES.CITY_OF_BALLARAT),
+			v.literal(COUNCIL_NAMES.BANYULE_CITY),
+			v.literal(COUNCIL_NAMES.GANNAWARRA_SHIRE),
+			v.literal(COUNCIL_NAMES.BAW_BAW_SHIRE),
+			v.literal(COUNCIL_NAMES.BAYSIDE_CITY),
+		),
 		placeDetails: v.object({
 			address_components: v.array(
 				v.object({
@@ -73,18 +82,16 @@ export const getCouncilData = action({
 	handler: async (_, args) => {
 		const { council, placeDetails } = args;
 
-		// Normalize council name for matching
-		const normalizedCouncil = council.trim();
-
-		// Check if we have a handler for this council
-		const handler = councilHandlers[normalizedCouncil];
+		// The council parameter is already validated by Convex schema
+		// No need to normalize since it's a literal union type
+		const handler = councilHandlers[council];
 
 		if (!handler) {
-			console.log(`No handler found for council: ${normalizedCouncil}`);
+			console.log(`No handler found for council: ${council}`);
 			return {
 				supported: false,
-				council: normalizedCouncil,
-				message: `Council "${normalizedCouncil}" is not currently supported`,
+				council: council,
+				message: `Council "${council}" is not currently supported`,
 				result: null,
 			} as CouncilData;
 		}
@@ -93,12 +100,12 @@ export const getCouncilData = action({
 			const result = await handler(placeDetails);
 			return {
 				supported: true,
-				council: normalizedCouncil,
+				council: council,
 				message: "OK",
 				result,
 			} as CouncilData;
 		} catch (error) {
-			console.error(`Error fetching data for ${normalizedCouncil}:`, error);
+			console.error(`Error fetching data for ${council}:`, error);
 			throw error;
 		}
 	},
