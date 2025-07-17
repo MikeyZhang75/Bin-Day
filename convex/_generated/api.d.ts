@@ -19,10 +19,12 @@ import type * as councils_ballarat from "../councils/ballarat.js";
 import type * as councils_banyule from "../councils/banyule.js";
 import type * as councils_bawBawShire from "../councils/bawBawShire.js";
 import type * as councils_bayside from "../councils/bayside.js";
+import type * as councils_campaspe from "../councils/campaspe.js";
 import type * as councils_errors from "../councils/errors.js";
 import type * as councils_gannawarra from "../councils/gannawarra.js";
 import type * as councils_index from "../councils/index.js";
 import type * as councils_monash from "../councils/monash.js";
+import type * as councils_types from "../councils/types.js";
 import type * as googlePlaces from "../googlePlaces.js";
 
 /**
@@ -40,10 +42,12 @@ declare const fullApi: ApiFromModules<{
   "councils/banyule": typeof councils_banyule;
   "councils/bawBawShire": typeof councils_bawBawShire;
   "councils/bayside": typeof councils_bayside;
+  "councils/campaspe": typeof councils_campaspe;
   "councils/errors": typeof councils_errors;
   "councils/gannawarra": typeof councils_gannawarra;
   "councils/index": typeof councils_index;
   "councils/monash": typeof councils_monash;
+  "councils/types": typeof councils_types;
   googlePlaces: typeof googlePlaces;
 }>;
 export declare const api: FilterApi<
