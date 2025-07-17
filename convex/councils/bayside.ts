@@ -5,7 +5,14 @@ import {
 } from "@/lib/addressExtractor";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../councilServices";
-import { COUNCIL_NAMES } from "../councils";
+import {
+	AddressNotFoundError,
+	COUNCIL_NAMES,
+	CouncilAPIError,
+	InvalidResponseError,
+	logError,
+	safeJsonParse,
+} from "./index";
 
 type SessionResponse = {
 	id: string;
@@ -153,20 +160,20 @@ async function getSession(): Promise<{
 	);
 
 	if (!response.ok) {
-		throw new Error(`Failed to get session: ${response.status}`);
+		throw new CouncilAPIError(COUNCIL_NAMES.BAYSIDE_CITY, response.status);
 	}
 
 	const sessionId = response.headers.get("x-intramaps-session");
 	if (!sessionId) {
-		throw new Error("No session ID returned");
+		throw new InvalidResponseError("No session ID returned");
 	}
 
-	const data = (await response.json()) as SessionResponse;
+	const data = await safeJsonParse<SessionResponse>(response);
 
 	// Find the Waste module
 	const wasteModule = data.moduleList.find((module) => module.name === "Waste");
 	if (!wasteModule) {
-		throw new Error("Waste module not found");
+		throw new InvalidResponseError("Waste module not found");
 	}
 
 	return { sessionId, wasteModuleId: wasteModule.id };
@@ -208,10 +215,10 @@ async function getFormTemplateId(
 	);
 
 	if (!response.ok) {
-		throw new Error(`Failed to get form: ${response.status}`);
+		throw new CouncilAPIError(COUNCIL_NAMES.BAYSIDE_CITY, response.status);
 	}
 
-	const data = (await response.json()) as FormResponse;
+	const data = await safeJsonParse<FormResponse>(response);
 
 	// Find the address search form
 	const addressForm = data.forms.find(
@@ -219,7 +226,7 @@ async function getFormTemplateId(
 	);
 
 	if (!addressForm) {
-		throw new Error("Address form not found");
+		throw new InvalidResponseError("Address form not found");
 	}
 
 	return addressForm.templateId;
@@ -264,25 +271,20 @@ async function searchAddress(
 	);
 
 	if (!response.ok) {
-		throw new Error(`Failed to search address: ${response.status}`);
+		throw new CouncilAPIError(COUNCIL_NAMES.BAYSIDE_CITY, response.status);
 	}
 
-	const data = (await response.json()) as AddressSearchResponse;
+	const data = await safeJsonParse<AddressSearchResponse>(response);
 
 	if (!data.fullText || data.fullText.length === 0) {
-		throw new Error("No results found for this address");
-	}
-
-	// Log if multiple results found (for debugging)
-	if (data.fullText.length > 1) {
-		console.log(
-			`Found ${data.fullText.length} results for address search, using first result`,
-		);
+		throw new AddressNotFoundError();
 	}
 
 	const firstResult = data.fullText[0];
 	if (!firstResult) {
-		throw new Error("Invalid response: no address data in results");
+		throw new InvalidResponseError(
+			"Invalid response: no address data in results",
+		);
 	}
 
 	return {
@@ -333,10 +335,10 @@ async function getWasteInfo(
 	);
 
 	if (!response.ok) {
-		throw new Error(`Failed to get waste info: ${response.status}`);
+		throw new CouncilAPIError(COUNCIL_NAMES.BAYSIDE_CITY, response.status);
 	}
 
-	const data = (await response.json()) as WasteInfoResponse;
+	const data = await safeJsonParse<WasteInfoResponse>(response);
 
 	return data;
 }
@@ -578,7 +580,14 @@ export async function fetchBaysideData(placeDetails: GooglePlaceDetails) {
 		// Parse and return the waste collection dates
 		return parseWasteInfoResponse(wasteInfo);
 	} catch (error) {
-		console.error("Bayside API error:", error);
-		throw new Error("Failed to fetch data from Bayside council");
+		logError(COUNCIL_NAMES.BAYSIDE_CITY, error);
+		if (
+			error instanceof CouncilAPIError ||
+			error instanceof AddressNotFoundError ||
+			error instanceof InvalidResponseError
+		) {
+			throw error;
+		}
+		throw new CouncilAPIError(COUNCIL_NAMES.BAYSIDE_CITY);
 	}
 }

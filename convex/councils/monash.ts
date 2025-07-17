@@ -6,13 +6,13 @@ import {
 import { calculateDistance } from "@/lib/distance";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../councilServices";
-import { COUNCIL_NAMES } from "../councils";
 import {
 	AddressNotFoundError,
+	COUNCIL_NAMES,
 	CouncilAPIError,
 	logError,
 	safeJsonParse,
-} from "../councils/errors";
+} from "./index";
 
 type MonashApiResponse = {
 	Items: {
