@@ -14,6 +14,8 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as councilServices from "../councilServices.js";
+import type * as councils_alpineShire from "../councils/alpineShire.js";
+import type * as councils_ballarat from "../councils/ballarat.js";
 import type * as councils_monash from "../councils/monash.js";
 import type * as googlePlaces from "../googlePlaces.js";
 
@@ -27,6 +29,8 @@ import type * as googlePlaces from "../googlePlaces.js";
  */
 declare const fullApi: ApiFromModules<{
   councilServices: typeof councilServices;
+  "councils/alpineShire": typeof councils_alpineShire;
+  "councils/ballarat": typeof councils_ballarat;
   "councils/monash": typeof councils_monash;
   googlePlaces: typeof googlePlaces;
 }>;

@@ -94,11 +94,13 @@ The app uses Expo Router's file-based routing:
 
 2. **Council APIs**
    - Monash Council waste collection API
+   - Alpine Shire waste collection API
+   - City of Ballarat waste collection API
    - Extensible pattern for adding more councils
 
 ### Utilities
 
-- `lib/addressExtractor.ts` - Extract address components from Google Places data
+- `lib/addressExtractor.ts` - Extract address components from Google Places data and format search addresses
 - `lib/distance.ts` - Calculate distances between coordinates
 - `lib/env.ts` - Environment variable validation with envalid
 
@@ -112,7 +114,10 @@ The app uses Expo Router's file-based routing:
 
 ### Council Services Integration
 
-- Currently supports City of Monash
+- Currently supports:
+  - City of Monash
+  - Alpine Shire
+  - City of Ballarat
 - Fetches waste collection dates for:
   - Landfill waste
   - Recycling

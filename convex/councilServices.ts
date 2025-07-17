@@ -1,6 +1,8 @@
 import { v } from "convex/values";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import { action } from "./_generated/server";
+import { fetchAlpineShireData } from "./councils/alpineShire";
+import { fetchBallaratData } from "./councils/ballarat";
 import { fetchMonashData } from "./councils/monash";
 
 export type WasteCollectionDates = {
@@ -23,6 +25,8 @@ const councilHandlers: Record<
 	(placeDetails: GooglePlaceDetails) => Promise<WasteCollectionDates>
 > = {
 	"City of Monash": fetchMonashData,
+	"Alpine Shire": fetchAlpineShireData,
+	"City of Ballarat": fetchBallaratData,
 };
 
 export const getCouncilData = action({
