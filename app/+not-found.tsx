@@ -1,6 +1,8 @@
+// External package imports
 import { Link, Stack } from "expo-router";
 import { StyleSheet } from "react-native";
 
+// Internal absolute imports
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 

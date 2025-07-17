@@ -1,4 +1,7 @@
+// External package imports
 import { Pressable, StyleSheet, View } from "react-native";
+
+// Internal absolute imports
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 
