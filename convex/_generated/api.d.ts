@@ -20,6 +20,7 @@ import type * as councils_banyule from "../councils/banyule.js";
 import type * as councils_bawBawShire from "../councils/bawBawShire.js";
 import type * as councils_bayside from "../councils/bayside.js";
 import type * as councils_campaspe from "../councils/campaspe.js";
+import type * as councils_dandenong from "../councils/dandenong.js";
 import type * as councils_errors from "../councils/errors.js";
 import type * as councils_gannawarra from "../councils/gannawarra.js";
 import type * as councils_index from "../councils/index.js";
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   "councils/bawBawShire": typeof councils_bawBawShire;
   "councils/bayside": typeof councils_bayside;
   "councils/campaspe": typeof councils_campaspe;
+  "councils/dandenong": typeof councils_dandenong;
   "councils/errors": typeof councils_errors;
   "councils/gannawarra": typeof councils_gannawarra;
   "councils/index": typeof councils_index;
