@@ -3,18 +3,17 @@ import {
 	extractAddressComponents,
 	getSearchAddress,
 } from "@/lib/addressExtractor";
-import { calculateDistance } from "@/lib/distance";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../councilServices";
 
-type MonashApiResponse = {
+type GannawarraApiResponse = {
 	Items: {
 		Id: string;
 		AddressSingleLine: string;
 		MunicipalSubdivision: string;
 		Distance: number;
 		Score: number;
-		LatLon: [number, number];
+		LatLon: [number, number] | null;
 	}[];
 	Offset: number;
 	Limit: number;
@@ -27,7 +26,7 @@ type WasteServicesResponse = {
 };
 
 function parseDateToUnixTimestamp(dateString: string): number | null {
-	// Parse date string like "Fri 25/7/2025" to Unix timestamp
+	// Parse date string like "Wed 23/7/2025" to Unix timestamp
 	const match = dateString.match(/\w+\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/);
 	if (!match) return null;
 
@@ -59,45 +58,42 @@ function parseWasteCollectionDates(html: string): WasteCollectionDates {
 		hardWaste: null,
 	};
 
-	// Parse Landfill Waste date
-	const landfillMatch = html.match(
-		/general-waste[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
+	// Parse General Waste (Landfill Waste) date
+	// Gannawarra uses "general-waste" class and "General Waste" as the title
+	const generalWasteMatch = html.match(
+		/general-waste[\s\S]*?<h3>General Waste<\/h3>[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
 	);
-	if (landfillMatch) {
-		dates.landfillWaste = parseDateToUnixTimestamp(landfillMatch[1].trim());
+	if (generalWasteMatch) {
+		dates.landfillWaste = parseDateToUnixTimestamp(generalWasteMatch[1].trim());
 	}
 
 	// Parse Recycling date
 	const recyclingMatch = html.match(
-		/recycling[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
+		/recycling[\s\S]*?<h3>Recycling<\/h3>[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
 	);
 	if (recyclingMatch) {
 		dates.recycling = parseDateToUnixTimestamp(recyclingMatch[1].trim());
 	}
 
-	// Parse Food and Garden Waste date
-	const foodGardenMatch = html.match(
-		/green-waste[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
+	// Parse Green Waste (Food and Garden Waste) date
+	// Gannawarra uses "green-waste" class and "Green Waste" as the title
+	const greenWasteMatch = html.match(
+		/green-waste[\s\S]*?<h3>Green Waste<\/h3>[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
 	);
-	if (foodGardenMatch) {
+	if (greenWasteMatch) {
 		dates.foodAndGardenWaste = parseDateToUnixTimestamp(
-			foodGardenMatch[1].trim(),
+			greenWasteMatch[1].trim(),
 		);
 	}
 
-	// Parse Hard Waste date
-	const hardWasteMatch = html.match(
-		/one-off-service[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
-	);
-	if (hardWasteMatch) {
-		dates.hardWaste = parseDateToUnixTimestamp(hardWasteMatch[1].trim());
-	}
+	// Gannawarra doesn't typically show hard waste in regular schedule
+	// It's usually booked separately
 
 	return dates;
 }
 
-async function searchMonashAddress(searchQuery: string) {
-	const url = `https://www.monash.vic.gov.au/api/v1/myarea/search?keywords=${encodeURIComponent(searchQuery)}`;
+async function searchGannawarraAddress(searchQuery: string) {
+	const url = `https://www.gannawarra.vic.gov.au/api/v1/myarea/search?keywords=${encodeURIComponent(searchQuery)}`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -105,14 +101,18 @@ async function searchMonashAddress(searchQuery: string) {
 			"User-Agent":
 				"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
 			Accept: "text/plain, */*; q=0.01",
-			"Accept-Language": "en-US,en;q=0.9",
-			"Accept-Encoding": "gzip, deflate, br",
-			Referer: "https://www.monash.vic.gov.au/",
-			Origin: "https://www.monash.vic.gov.au",
-			"X-Requested-With": "XMLHttpRequest",
-			"Sec-Fetch-Dest": "empty",
-			"Sec-Fetch-Mode": "cors",
-			"Sec-Fetch-Site": "same-origin",
+			"Accept-Encoding": "gzip, deflate, br, zstd",
+			"sec-ch-ua-platform": '"macOS"',
+			"x-requested-with": "XMLHttpRequest",
+			"sec-ch-ua":
+				'"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+			"sec-ch-ua-mobile": "?0",
+			"sec-fetch-site": "same-origin",
+			"sec-fetch-mode": "cors",
+			"sec-fetch-dest": "empty",
+			referer: "https://www.gannawarra.vic.gov.au/My-Neighbourhood",
+			"accept-language": "en-GB,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6",
+			priority: "u=1, i",
 		},
 	});
 
@@ -120,13 +120,13 @@ async function searchMonashAddress(searchQuery: string) {
 		throw new Error(`HTTP error! status: ${response.status}`);
 	}
 
-	const data = (await response.json()) as MonashApiResponse;
+	const data = (await response.json()) as GannawarraApiResponse;
 
 	return data;
 }
 
 async function fetchWasteServices(geolocationId: string) {
-	const wasteServicesUrl = `https://www.monash.vic.gov.au/ocapi/Public/myarea/wasteservices?geolocationid=${geolocationId}&ocsvclang=en-AU`;
+	const wasteServicesUrl = `https://www.gannawarra.vic.gov.au/ocapi/Public/myarea/wasteservices?geolocationid=${geolocationId}&ocsvclang=en-AU`;
 
 	const wasteServicesResponse = await fetch(wasteServicesUrl, {
 		method: "GET",
@@ -143,8 +143,7 @@ async function fetchWasteServices(geolocationId: string) {
 			"sec-fetch-site": "same-origin",
 			"sec-fetch-mode": "cors",
 			"sec-fetch-dest": "empty",
-			referer:
-				"https://www.monash.vic.gov.au/Waste-Sustainability/Bin-Collection/When-we-collect-your-bins",
+			referer: "https://www.gannawarra.vic.gov.au/My-Neighbourhood",
 			"accept-language": "en-GB,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6",
 			priority: "u=1, i",
 		},
@@ -156,7 +155,7 @@ async function fetchWasteServices(geolocationId: string) {
 	return wasteServicesData;
 }
 
-export async function fetchMonashData(placeDetails: GooglePlaceDetails) {
+export async function fetchGannawarraData(placeDetails: GooglePlaceDetails) {
 	// Extract address components using the utility function
 	const addressComponents = extractAddressComponents(placeDetails);
 	// Construct search query, only including subpremise if it exists
@@ -164,40 +163,26 @@ export async function fetchMonashData(placeDetails: GooglePlaceDetails) {
 
 	try {
 		// Search for the address
-		const addressData = await searchMonashAddress(searchQuery);
+		const addressData = await searchGannawarraAddress(searchQuery);
 
 		// Extract the ID from the response
 		if (!addressData || addressData.Items.length === 0) {
 			throw new Error("No results found for this address");
 		}
 
-		// Calculate distances for each item
-		const userLat = placeDetails.geometry.location.lat;
-		const userLng = placeDetails.geometry.location.lng;
+		// Note: Gannawarra API returns null for LatLon in some cases
+		// We need to handle this differently than other councils
 
-		// Create a record of id:distance for each item
-		const distanceRecord: Record<string, number> = {};
-		const itemsWithDistances = addressData.Items.map((item) => {
-			const distance = calculateDistance(
-				userLat,
-				userLng,
-				item.LatLon[0],
-				item.LatLon[1],
-			);
-			distanceRecord[item.Id] = distance;
-			return { ...item, calculatedDistance: distance };
-		});
+		// Since LatLon might be null, we can't calculate distances
+		// Just use the first result (which has the highest score)
+		const selectedItem = addressData.Items[0];
 
-		// Sort items by calculated distance (closest first)
-		itemsWithDistances.sort(
-			(a, b) => a.calculatedDistance - b.calculatedDistance,
-		);
-
-		// Get the closest item
-		const closestItem = itemsWithDistances[0];
+		// If we have location data from Google Places and the council API has lat/lon,
+		// we could calculate distances, but since Gannawarra often returns null,
+		// we'll just use the first result which should be the best match based on score
 
 		// Fetch waste collection services data
-		const wasteServicesData = await fetchWasteServices(closestItem.Id);
+		const wasteServicesData = await fetchWasteServices(selectedItem.Id);
 
 		// Parse waste collection dates from HTML content
 		const wasteCollectionDates = parseWasteCollectionDates(
@@ -206,7 +191,7 @@ export async function fetchMonashData(placeDetails: GooglePlaceDetails) {
 
 		return wasteCollectionDates;
 	} catch (error) {
-		console.error("Monash API error:", error);
-		throw new Error("Failed to fetch data from Monash council");
+		console.error("Gannawarra API error:", error);
+		throw new Error("Failed to fetch data from Gannawarra council");
 	}
 }

@@ -118,6 +118,8 @@ The app uses Expo Router's file-based routing:
   - City of Monash
   - Alpine Shire
   - City of Ballarat
+  - City of Banyule
+  - Gannawarra Shire
 - Fetches waste collection dates for:
   - Landfill waste
   - Recycling

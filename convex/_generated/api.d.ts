@@ -16,6 +16,8 @@ import type {
 import type * as councilServices from "../councilServices.js";
 import type * as councils_alpineShire from "../councils/alpineShire.js";
 import type * as councils_ballarat from "../councils/ballarat.js";
+import type * as councils_banyule from "../councils/banyule.js";
+import type * as councils_gannawarra from "../councils/gannawarra.js";
 import type * as councils_monash from "../councils/monash.js";
 import type * as googlePlaces from "../googlePlaces.js";
 
@@ -31,6 +33,8 @@ declare const fullApi: ApiFromModules<{
   councilServices: typeof councilServices;
   "councils/alpineShire": typeof councils_alpineShire;
   "councils/ballarat": typeof councils_ballarat;
+  "councils/banyule": typeof councils_banyule;
+  "councils/gannawarra": typeof councils_gannawarra;
   "councils/monash": typeof councils_monash;
   googlePlaces: typeof googlePlaces;
 }>;
