@@ -19,6 +19,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { api } from "@/convex/_generated/api";
 import type { CouncilData } from "@/convex/councilServices";
+import { type CouncilName, isValidCouncilName } from "@/convex/councils";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import type {
 	GooglePlaceDetails,
@@ -39,7 +40,9 @@ const formatDate = (timestamp: number | null): string => {
 
 export default function SearchScreen() {
 	const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
-	const [selectedCouncil, setSelectedCouncil] = useState<string | null>(null);
+	const [selectedCouncil, setSelectedCouncil] = useState<CouncilName | null>(
+		null,
+	);
 	const [selectedPlaceDetails, setSelectedPlaceDetails] =
 		useState<GooglePlaceDetails | null>(null);
 	const [councilData, setCouncilData] = useState<CouncilData | null>(null);
@@ -137,7 +140,7 @@ export default function SearchScreen() {
 					component.types.includes("administrative_area_level_2"),
 				);
 
-				if (council) {
+				if (council && isValidCouncilName(council.long_name)) {
 					setSelectedCouncil(council.long_name);
 				} else {
 					setSelectedCouncil(null);

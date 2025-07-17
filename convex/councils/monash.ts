@@ -6,6 +6,13 @@ import {
 import { calculateDistance } from "@/lib/distance";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../councilServices";
+import { COUNCIL_NAMES } from "../councils";
+import {
+	AddressNotFoundError,
+	CouncilAPIError,
+	logError,
+	safeJsonParse,
+} from "../councils/errors";
 
 type MonashApiResponse = {
 	Items: {
@@ -118,10 +125,10 @@ async function searchMonashAddress(searchQuery: string) {
 	});
 
 	if (!response.ok) {
-		throw new Error(`HTTP error! status: ${response.status}`);
+		throw new CouncilAPIError(COUNCIL_NAMES.CITY_OF_MONASH, response.status);
 	}
 
-	const data = (await response.json()) as MonashApiResponse;
+	const data = await safeJsonParse<MonashApiResponse>(response);
 
 	return data;
 }
@@ -151,8 +158,16 @@ async function fetchWasteServices(geolocationId: string) {
 		},
 	});
 
-	const wasteServicesData =
-		(await wasteServicesResponse.json()) as WasteServicesResponse;
+	if (!wasteServicesResponse.ok) {
+		throw new CouncilAPIError(
+			COUNCIL_NAMES.CITY_OF_MONASH,
+			wasteServicesResponse.status,
+		);
+	}
+
+	const wasteServicesData = await safeJsonParse<WasteServicesResponse>(
+		wasteServicesResponse,
+	);
 
 	return wasteServicesData;
 }
@@ -169,7 +184,7 @@ export async function fetchMonashData(placeDetails: GooglePlaceDetails) {
 
 		// Extract the ID from the response
 		if (!addressData || addressData.Items.length === 0) {
-			throw new Error("No results found for this address");
+			throw new AddressNotFoundError();
 		}
 
 		// Calculate distances for each item
@@ -207,7 +222,13 @@ export async function fetchMonashData(placeDetails: GooglePlaceDetails) {
 
 		return wasteCollectionDates;
 	} catch (error) {
-		console.error("Monash API error:", error);
-		throw new Error("Failed to fetch data from Monash council");
+		logError(COUNCIL_NAMES.CITY_OF_MONASH, error);
+		if (
+			error instanceof CouncilAPIError ||
+			error instanceof AddressNotFoundError
+		) {
+			throw error;
+		}
+		throw new CouncilAPIError(COUNCIL_NAMES.CITY_OF_MONASH);
 	}
 }

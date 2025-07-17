@@ -79,6 +79,8 @@ The app uses Expo Router's file-based routing:
    - Generated types in `convex/_generated/`
    - Backend functions in `convex/` directory:
      - `councilServices.ts` - Council data fetching logic with WasteCollectionDates type
+     - `councils/index.ts` - Centralized council types, constants, and validation utilities
+     - `councils/errors.ts` - Standardized error classes and utilities for council implementations
      - `councils/monash.ts` - Monash council specific implementation
      - `councils/alpineShire.ts` - Alpine Shire council specific implementation
      - `councils/ballarat.ts` - City of Ballarat council specific implementation

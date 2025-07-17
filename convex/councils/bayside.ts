@@ -5,6 +5,7 @@ import {
 } from "@/lib/addressExtractor";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../councilServices";
+import { COUNCIL_NAMES } from "../councils";
 
 type SessionResponse = {
 	id: string;
@@ -407,6 +408,7 @@ function parseDateString(dateString: string): number | null {
 			Feb: 2,
 			Mar: 3,
 			Apr: 4,
+			May: 5,
 			Jun: 6,
 			Jul: 7,
 			Aug: 8,
@@ -426,8 +428,6 @@ function parseDateString(dateString: string): number | null {
 			October: 10,
 			November: 11,
 			December: 12,
-			// Shared month
-			May: 5,
 		};
 
 		const month = monthMap[monthStr] || monthMap[monthStr.substring(0, 3)];
@@ -548,7 +548,10 @@ function parseWasteInfoResponse(data: WasteInfoResponse): WasteCollectionDates {
 
 export async function fetchBaysideData(placeDetails: GooglePlaceDetails) {
 	const addressComponents = extractAddressComponents(placeDetails);
-	const searchQuery = getSearchAddress(addressComponents, "Bayside");
+	const searchQuery = getSearchAddress(
+		addressComponents,
+		COUNCIL_NAMES.BAYSIDE_CITY,
+	);
 
 	try {
 		// Step 1: Get session and waste module ID
