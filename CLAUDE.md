@@ -183,3 +183,8 @@ The project includes:
 - Luxon 3.5.0 (for date/time handling)
 - envalid 8.0.0 (for environment validation)
 - uuid 11.0.5 (for generating unique identifiers)
+
+## Development Warnings
+
+- Do not run `bun run dev`, `bunx convex dev` or any related server starting command.
+- Do not run `git` related bash commands UNDER ANY CIRCUMSTANCES, unless I instructed you to do so.

@@ -5,6 +5,13 @@ import {
 } from "@/lib/addressExtractor";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../councilServices";
+import {
+	COUNCIL_NAMES,
+	CouncilAPIError,
+	InvalidResponseError,
+	logError,
+	safeJsonParse,
+} from "./index";
 
 type AlpineShireApiResponse = {
 	command: string;
@@ -113,10 +120,10 @@ export async function fetchAlpineShireData(
 		});
 
 		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
+			throw new CouncilAPIError(COUNCIL_NAMES.ALPINE_SHIRE, response.status);
 		}
 
-		const data = (await response.json()) as AlpineShireApiResponse;
+		const data = await safeJsonParse<AlpineShireApiResponse>(response);
 
 		// Find the insert command that contains the HTML with collection dates
 		const insertCommand = data.find(
@@ -127,14 +134,20 @@ export async function fetchAlpineShireData(
 		);
 
 		if (!insertCommand || !insertCommand.data) {
-			throw new Error("No collection data found in response");
+			throw new InvalidResponseError("No collection data found in response");
 		}
 
 		// Parse the HTML content to extract dates
 		const wasteCollectionDates = parseAlpineShireWasteData(insertCommand.data);
 		return wasteCollectionDates;
 	} catch (error) {
-		console.error("Alpine Shire API error:", error);
-		throw new Error("Failed to fetch data from Alpine Shire council");
+		logError(COUNCIL_NAMES.ALPINE_SHIRE, error);
+		if (
+			error instanceof CouncilAPIError ||
+			error instanceof InvalidResponseError
+		) {
+			throw error;
+		}
+		throw new CouncilAPIError(COUNCIL_NAMES.ALPINE_SHIRE);
 	}
 }

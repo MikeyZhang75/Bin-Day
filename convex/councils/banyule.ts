@@ -6,6 +6,13 @@ import {
 import { calculateDistance } from "@/lib/distance";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../councilServices";
+import {
+	AddressNotFoundError,
+	COUNCIL_NAMES,
+	CouncilAPIError,
+	logError,
+	safeJsonParse,
+} from "./index";
 
 type BanyuleApiResponse = {
 	Items: {
@@ -118,10 +125,10 @@ async function searchBanyuleAddress(searchQuery: string) {
 	});
 
 	if (!response.ok) {
-		throw new Error(`HTTP error! status: ${response.status}`);
+		throw new CouncilAPIError(COUNCIL_NAMES.BANYULE_CITY, response.status);
 	}
 
-	const data = (await response.json()) as BanyuleApiResponse;
+	const data = await safeJsonParse<BanyuleApiResponse>(response);
 
 	return data;
 }
@@ -151,8 +158,16 @@ async function fetchWasteServices(geolocationId: string) {
 		},
 	});
 
-	const wasteServicesData =
-		(await wasteServicesResponse.json()) as WasteServicesResponse;
+	if (!wasteServicesResponse.ok) {
+		throw new CouncilAPIError(
+			COUNCIL_NAMES.BANYULE_CITY,
+			wasteServicesResponse.status,
+		);
+	}
+
+	const wasteServicesData = await safeJsonParse<WasteServicesResponse>(
+		wasteServicesResponse,
+	);
 
 	return wasteServicesData;
 }
@@ -169,7 +184,7 @@ export async function fetchBanyuleData(placeDetails: GooglePlaceDetails) {
 
 		// Extract the ID from the response
 		if (!addressData || addressData.Items.length === 0) {
-			throw new Error("No results found for this address");
+			throw new AddressNotFoundError();
 		}
 
 		// Calculate distances for each item
@@ -207,7 +222,13 @@ export async function fetchBanyuleData(placeDetails: GooglePlaceDetails) {
 
 		return wasteCollectionDates;
 	} catch (error) {
-		console.error("Banyule API error:", error);
-		throw new Error("Failed to fetch data from Banyule council");
+		logError(COUNCIL_NAMES.BANYULE_CITY, error);
+		if (
+			error instanceof CouncilAPIError ||
+			error instanceof AddressNotFoundError
+		) {
+			throw error;
+		}
+		throw new CouncilAPIError(COUNCIL_NAMES.BANYULE_CITY);
 	}
 }
