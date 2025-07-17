@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as councilServices from "../councilServices.js";
+import type * as councils_monash from "../councils/monash.js";
 import type * as googlePlaces from "../googlePlaces.js";
 
 /**
@@ -26,6 +27,7 @@ import type * as googlePlaces from "../googlePlaces.js";
  */
 declare const fullApi: ApiFromModules<{
   councilServices: typeof councilServices;
+  "councils/monash": typeof councils_monash;
   googlePlaces: typeof googlePlaces;
 }>;
 export declare const api: FilterApi<

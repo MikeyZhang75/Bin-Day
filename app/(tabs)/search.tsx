@@ -25,6 +25,18 @@ import type {
 	GooglePrediction,
 } from "@/types/googlePlaces";
 
+// Helper function to format Unix timestamp to readable date
+const formatDate = (timestamp: number | null): string => {
+	if (!timestamp) return "Not available";
+	const date = new Date(timestamp * 1000); // Convert seconds to milliseconds
+	return date.toLocaleDateString("en-AU", {
+		weekday: "short",
+		day: "numeric",
+		month: "short",
+		year: "numeric",
+	});
+};
+
 export default function SearchScreen() {
 	const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 	const [selectedCouncil, setSelectedCouncil] = useState<string | null>(null);
@@ -339,12 +351,104 @@ export default function SearchScreen() {
 										</ThemedText>
 									) : councilData ? (
 										councilData.supported && councilData.result ? (
-											<View>
-												{councilData.result.id && (
-													<ThemedText style={styles.councilDataText}>
-														Property ID: {councilData.result.id}
-													</ThemedText>
-												)}
+											<View style={styles.wasteCollectionContainer}>
+												<ThemedText style={styles.wasteCollectionTitle}>
+													Waste Collection Dates
+												</ThemedText>
+
+												{/* Landfill Waste */}
+												<View style={styles.wasteItem}>
+													<View
+														style={[
+															styles.wasteIconContainer,
+															{ backgroundColor: "#FF6B6B20" },
+														]}
+													>
+														<IconSymbol
+															name="trash"
+															size={20}
+															color="#FF6B6B"
+														/>
+													</View>
+													<View style={styles.wasteContent}>
+														<ThemedText style={styles.wasteType}>
+															Landfill Waste
+														</ThemedText>
+														<ThemedText style={styles.wasteDate}>
+															{formatDate(councilData.result.landfillWaste)}
+														</ThemedText>
+													</View>
+												</View>
+
+												{/* Recycling */}
+												<View style={styles.wasteItem}>
+													<View
+														style={[
+															styles.wasteIconContainer,
+															{ backgroundColor: "#FFC10720" },
+														]}
+													>
+														<IconSymbol
+															name="arrow.3.trianglepath"
+															size={20}
+															color="#FFC107"
+														/>
+													</View>
+													<View style={styles.wasteContent}>
+														<ThemedText style={styles.wasteType}>
+															Recycling
+														</ThemedText>
+														<ThemedText style={styles.wasteDate}>
+															{formatDate(councilData.result.recycling)}
+														</ThemedText>
+													</View>
+												</View>
+
+												{/* Food and Garden Waste */}
+												<View style={styles.wasteItem}>
+													<View
+														style={[
+															styles.wasteIconContainer,
+															{ backgroundColor: "#4CAF5020" },
+														]}
+													>
+														<IconSymbol name="leaf" size={20} color="#4CAF50" />
+													</View>
+													<View style={styles.wasteContent}>
+														<ThemedText style={styles.wasteType}>
+															Food & Garden Waste
+														</ThemedText>
+														<ThemedText style={styles.wasteDate}>
+															{formatDate(
+																councilData.result.foodAndGardenWaste,
+															)}
+														</ThemedText>
+													</View>
+												</View>
+
+												{/* Hard Waste */}
+												<View style={styles.wasteItem}>
+													<View
+														style={[
+															styles.wasteIconContainer,
+															{ backgroundColor: "#9E9E9E20" },
+														]}
+													>
+														<IconSymbol
+															name="shippingbox"
+															size={20}
+															color="#9E9E9E"
+														/>
+													</View>
+													<View style={styles.wasteContent}>
+														<ThemedText style={styles.wasteType}>
+															Hard Waste
+														</ThemedText>
+														<ThemedText style={styles.wasteDate}>
+															{formatDate(councilData.result.hardWaste)}
+														</ThemedText>
+													</View>
+												</View>
 											</View>
 										) : (
 											<ThemedText style={styles.councilUnsupported}>
@@ -538,6 +642,39 @@ const styles = StyleSheet.create({
 		opacity: 0.5,
 		fontStyle: "italic",
 		marginTop: 4,
+	},
+	wasteCollectionContainer: {
+		marginTop: 12,
+	},
+	wasteCollectionTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		marginBottom: 12,
+	},
+	wasteItem: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginBottom: 12,
+	},
+	wasteIconContainer: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		justifyContent: "center",
+		alignItems: "center",
+		marginRight: 12,
+	},
+	wasteContent: {
+		flex: 1,
+	},
+	wasteType: {
+		fontSize: 14,
+		fontWeight: "500",
+		marginBottom: 2,
+	},
+	wasteDate: {
+		fontSize: 13,
+		opacity: 0.7,
 	},
 	emptyState: {
 		flex: 1,
