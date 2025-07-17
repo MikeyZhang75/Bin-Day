@@ -13,6 +13,15 @@ import {
 } from "react-native";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
+// Constants
+const SWIPE_THRESHOLD = 100;
+const SWIPE_VELOCITY_THRESHOLD = 0.5;
+const OVERLAY_MAX_OPACITY = 0.5;
+const ANIMATION_DURATION = 200;
+const SPRING_TENSION = 65;
+const SPRING_FRICTION = 11;
+const OVERLAY_FADE_DURATION = 300;
+
 interface SwipeableModalProps
 	extends Omit<ModalProps, "animationType" | "children"> {
 	visible: boolean;
@@ -30,12 +39,16 @@ export function SwipeableModal({
 	children,
 	style,
 	showDragIndicator = true,
-	swipeThreshold = 100,
-	swipeVelocityThreshold = 0.5,
+	swipeThreshold = SWIPE_THRESHOLD,
+	swipeVelocityThreshold = SWIPE_VELOCITY_THRESHOLD,
 	...modalProps
 }: SwipeableModalProps) {
 	// Theme colors
 	const backgroundColor = useThemeColor({}, "background");
+	const indicatorColor = useThemeColor(
+		{ light: "#C0C0C0", dark: "#666" },
+		"text",
+	);
 
 	// Animation values
 	const modalTranslateY = useRef(new Animated.Value(0)).current;
@@ -56,7 +69,7 @@ export function SwipeableModal({
 					modalTranslateY.setValue(gestureState.dy);
 					// Calculate opacity based on position (1 at top, 0 at bottom)
 					const opacity = Math.max(0, 1 - gestureState.dy / screenHeight);
-					modalOpacity.setValue(opacity * 0.5); // Max opacity 0.5
+					modalOpacity.setValue(opacity * OVERLAY_MAX_OPACITY);
 				}
 			},
 			onPanResponderRelease: (_, gestureState) => {
@@ -68,12 +81,12 @@ export function SwipeableModal({
 					Animated.parallel([
 						Animated.timing(modalTranslateY, {
 							toValue: screenHeight,
-							duration: 200,
+							duration: ANIMATION_DURATION,
 							useNativeDriver: true,
 						}),
 						Animated.timing(modalOpacity, {
 							toValue: 0,
-							duration: 200,
+							duration: ANIMATION_DURATION,
 							useNativeDriver: true,
 						}),
 					]).start(() => {
@@ -87,7 +100,7 @@ export function SwipeableModal({
 							useNativeDriver: true,
 						}),
 						Animated.spring(modalOpacity, {
-							toValue: 0.5,
+							toValue: OVERLAY_MAX_OPACITY,
 							useNativeDriver: true,
 						}),
 					]).start();
@@ -106,12 +119,12 @@ export function SwipeableModal({
 				Animated.spring(modalTranslateY, {
 					toValue: 0,
 					useNativeDriver: true,
-					tension: 65,
-					friction: 11,
+					tension: SPRING_TENSION,
+					friction: SPRING_FRICTION,
 				}),
 				Animated.timing(modalOpacity, {
-					toValue: 0.5,
-					duration: 300,
+					toValue: OVERLAY_MAX_OPACITY,
+					duration: OVERLAY_FADE_DURATION,
 					useNativeDriver: true,
 				}),
 			]).start();
@@ -123,12 +136,12 @@ export function SwipeableModal({
 		Animated.parallel([
 			Animated.timing(modalTranslateY, {
 				toValue: screenHeight,
-				duration: 200,
+				duration: ANIMATION_DURATION,
 				useNativeDriver: true,
 			}),
 			Animated.timing(modalOpacity, {
 				toValue: 0,
-				duration: 200,
+				duration: ANIMATION_DURATION,
 				useNativeDriver: true,
 			}),
 		]).start(() => {
@@ -171,7 +184,12 @@ export function SwipeableModal({
 				>
 					{showDragIndicator && (
 						<View style={styles.dragIndicatorContainer}>
-							<View style={styles.dragIndicator} />
+							<View
+								style={[
+									styles.dragIndicator,
+									{ backgroundColor: indicatorColor },
+								]}
+							/>
 						</View>
 					)}
 					{typeof children === "function" ? children(closeModal) : children}
@@ -224,7 +242,6 @@ const styles = StyleSheet.create({
 	dragIndicator: {
 		width: 40,
 		height: 5,
-		backgroundColor: "#C0C0C0",
 		borderRadius: 2.5,
 	},
 });
