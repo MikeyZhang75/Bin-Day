@@ -4,6 +4,7 @@ import { action } from "./_generated/server";
 import { fetchAlpineShireData } from "./councils/alpineShire";
 import { fetchBallaratData } from "./councils/ballarat";
 import { fetchBanyuleData } from "./councils/banyule";
+import { fetchBawBawShireData } from "./councils/bawBawShire";
 import { fetchGannawarraData } from "./councils/gannawarra";
 import { fetchMonashData } from "./councils/monash";
 
@@ -12,6 +13,7 @@ export type WasteCollectionDates = {
 	recycling: number | null;
 	foodAndGardenWaste: number | null;
 	hardWaste: number | null;
+	glass: number | null;
 };
 
 export type CouncilData = {
@@ -31,6 +33,7 @@ const councilHandlers: Record<
 	"City of Ballarat": fetchBallaratData,
 	"Banyule City": fetchBanyuleData,
 	"Gannawarra Shire": fetchGannawarraData,
+	"Baw Baw Shire": fetchBawBawShireData,
 };
 
 export const getCouncilData = action({

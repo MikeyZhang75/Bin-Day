@@ -60,6 +60,7 @@ function parseBallaratWasteData(
 		recycling: null,
 		foodAndGardenWaste: null,
 		hardWaste: null,
+		glass: null,
 	};
 
 	// Parse waste collection dates

@@ -56,6 +56,7 @@ function parseWasteCollectionDates(html: string): WasteCollectionDates {
 		recycling: null,
 		foodAndGardenWaste: null,
 		hardWaste: null,
+		glass: null,
 	};
 
 	// Parse General Waste (Landfill Waste) date

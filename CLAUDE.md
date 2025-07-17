@@ -78,8 +78,13 @@ The app uses Expo Router's file-based routing:
 5. **Convex Backend**
    - Generated types in `convex/_generated/`
    - Backend functions in `convex/` directory:
-     - `councilServices.ts` - Council data fetching logic
+     - `councilServices.ts` - Council data fetching logic with WasteCollectionDates type
      - `councils/monash.ts` - Monash council specific implementation
+     - `councils/alpineShire.ts` - Alpine Shire council specific implementation
+     - `councils/ballarat.ts` - City of Ballarat council specific implementation
+     - `councils/banyule.ts` - Banyule City council specific implementation
+     - `councils/gannawarra.ts` - Gannawarra Shire council specific implementation
+     - `councils/bawBawShire.ts` - Baw Baw Shire council specific implementation
      - `googlePlaces.ts` - Google Places API integration
    - Use Convex React hooks for data fetching
 
@@ -95,11 +100,14 @@ The app uses Expo Router's file-based routing:
    - Monash Council waste collection API
    - Alpine Shire waste collection API
    - City of Ballarat waste collection API
+   - Banyule City waste collection API
+   - Gannawarra Shire waste collection API
+   - Baw Baw Shire waste collection API
    - Extensible pattern for adding more councils
 
 ### Utilities
 
-- `lib/addressExtractor.ts` - Extract address components from Google Places data and format search addresses
+- `lib/addressExtractor.ts` - Extract address components from Google Places data and format search addresses (supports council-specific formatting)
 - `lib/distance.ts` - Calculate distances between coordinates
 - `lib/env.ts` - Environment variable validation with envalid
 
@@ -119,11 +127,13 @@ The app uses Expo Router's file-based routing:
   - City of Ballarat
   - City of Banyule
   - Gannawarra Shire
+  - Baw Baw Shire
 - Fetches waste collection dates for:
   - Landfill waste
   - Recycling
   - Food & garden waste
   - Hard waste
+  - Glass recycling (where available)
 
 ### Type Definitions
 
