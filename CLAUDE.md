@@ -143,9 +143,17 @@ The app uses Expo Router's file-based routing:
 5. **Testing**: No test framework is currently configured. If tests are needed, suggest setting up Jest with React Native Testing Library.
 
 6. **Environment Variables**:
+
    - Use `envalid` for validation in `lib/env.ts`
    - Prefix client-side variables with `EXPO_PUBLIC_`
    - Store sensitive API keys in Convex environment variables
+
+7. **Git Branch Naming Convention**:
+   - `feat/` - for new features (e.g., `feat/add-baw-baw-shire-council`)
+   - `fix/` - for bug fixes (e.g., `fix/address-search-error`)
+   - `chore/` - for maintenance tasks (e.g., `chore/update-dependencies`)
+   - `docs/` - for documentation (e.g., `docs/api-integration-guide`)
+   - Use hyphens to separate words in branch names
 
 ## Environment Setup
 
