@@ -269,6 +269,11 @@ export default function SearchScreen() {
 	);
 
 	const selectAddress = async (prediction: GooglePrediction) => {
+		// Immediately hide dropdown and keyboard
+		setShowResults(false);
+		setIsSearching(false);
+		Keyboard.dismiss();
+
 		try {
 			const response = await placeDetails({
 				placeId: prediction.place_id,
@@ -304,11 +309,8 @@ export default function SearchScreen() {
 
 			setSearchResults([]);
 			setSearchQuery("");
-			setShowResults(false);
 			setSessionToken(uuidv4());
-			Keyboard.dismiss();
 			setIsSearchFocused(false);
-			setIsSearching(false);
 		} catch (error) {
 			console.error("Error retrieving full address:", error);
 			setSelectedAddress(prediction.description);
@@ -317,11 +319,8 @@ export default function SearchScreen() {
 			setUnsupportedCouncil(null);
 			setSearchResults([]);
 			setSearchQuery("");
-			setShowResults(false);
 			setSessionToken(uuidv4());
-			Keyboard.dismiss();
 			setIsSearchFocused(false);
-			setIsSearching(false);
 		}
 	};
 
@@ -383,19 +382,39 @@ export default function SearchScreen() {
 				style={[
 					styles.wasteCard,
 					{
-						backgroundColor: cardBgColor,
+						backgroundColor: isToday ? `${type.color}10` : cardBgColor,
 						borderColor: isToday || isTomorrow ? type.color : borderColor,
-						borderWidth: isToday || isTomorrow ? 2 : 1,
+						borderWidth: isToday ? 2 : 1,
+						shadowColor: isToday ? type.color : "transparent",
+						shadowOffset: isToday
+							? { width: 0, height: 2 }
+							: { width: 0, height: 0 },
+						shadowOpacity: isToday ? 0.25 : 0,
+						shadowRadius: isToday ? 8 : 0,
+						elevation: isToday ? 5 : 0,
 					},
 				]}
 			>
 				<View
-					style={[styles.wasteIconContainer, { backgroundColor: type.bgColor }]}
+					style={[
+						styles.wasteIconContainer,
+						{
+							backgroundColor: isToday ? type.color : type.bgColor,
+						},
+					]}
 				>
-					<IconSymbol name={type.icon} size={24} color={type.color} />
+					<IconSymbol
+						name={type.icon}
+						size={isToday ? 24 : 22}
+						color={isToday ? "#FFFFFF" : type.color}
+					/>
 				</View>
 				<View style={styles.wasteContent}>
-					<ThemedText style={styles.wasteType}>{type.name}</ThemedText>
+					<ThemedText
+						style={[styles.wasteType, isToday && { fontWeight: "700" }]}
+					>
+						{type.name}
+					</ThemedText>
 					{isToday || isTomorrow ? (
 						<View style={styles.wasteDateRow}>
 							<View
@@ -537,11 +556,15 @@ export default function SearchScreen() {
 										},
 									]}
 									pointerEvents={showResults ? "auto" : "none"}
+									onStartShouldSetResponder={() => true}
+									onResponderTerminationRequest={() => false}
 								>
 									<FlatList
 										data={searchResults.slice(0, 3)}
 										renderItem={renderSearchResult}
 										keyExtractor={(item) => item.place_id}
+										keyboardShouldPersistTaps="always"
+										scrollEnabled={false}
 										ItemSeparatorComponent={() => (
 											<View
 												style={[
@@ -590,7 +613,8 @@ export default function SearchScreen() {
 															{line1}
 														</ThemedText>
 														<ThemedText style={styles.addressLine2}>
-															{line2} • {selectedCouncil}
+															{line2}
+															{selectedCouncil && ` • ${selectedCouncil}`}
 														</ThemedText>
 													</>
 												);
@@ -641,8 +665,41 @@ export default function SearchScreen() {
 														type.key as keyof typeof councilData.result
 													] as number | null;
 													if (type.key === "glass" && !date) return null;
-													return renderWasteItem(type, date);
-												})}
+													return { type, date };
+												})
+													.filter((item) => item !== null)
+													.sort((a, b) => {
+														// Sort by date - today's bins first
+														if (!a || !b) return 0;
+														const aDate = formatDate(a.date);
+														const bDate = formatDate(b.date);
+														const aIsToday = aDate === "Today";
+														const bIsToday = bDate === "Today";
+
+														if (aIsToday && !bIsToday) return -1;
+														if (!aIsToday && bIsToday) return 1;
+
+														// Then sort by tomorrow
+														const aIsTomorrow = aDate === "Tomorrow";
+														const bIsTomorrow = bDate === "Tomorrow";
+
+														if (aIsTomorrow && !bIsTomorrow) return -1;
+														if (!aIsTomorrow && bIsTomorrow) return 1;
+
+														// Then sort by date
+														const dateDiff = (a.date || 0) - (b.date || 0);
+
+														// If same date, sort alphabetically by name
+														if (dateDiff === 0) {
+															return a.type.name.localeCompare(b.type.name);
+														}
+
+														return dateDiff;
+													})
+													.map(
+														(item) =>
+															item && renderWasteItem(item.type, item.date),
+													)}
 											</View>
 										) : null}
 									</View>
@@ -831,22 +888,26 @@ const styles = StyleSheet.create({
 		opacity: 0.6,
 	},
 	wasteGrid: {
+		flexDirection: "row",
+		flexWrap: "wrap",
 		gap: 12,
 	},
 	wasteCard: {
 		flexDirection: "row",
 		alignItems: "center",
-		padding: 16,
+		padding: 14,
 		borderRadius: 16,
-		marginBottom: 8,
+		marginBottom: 0,
+		flex: 1,
+		minWidth: "47%",
 	},
 	wasteIconContainer: {
-		width: 48,
-		height: 48,
-		borderRadius: 24,
+		width: 44,
+		height: 44,
+		borderRadius: 22,
 		justifyContent: "center",
 		alignItems: "center",
-		marginRight: 16,
+		marginRight: 12,
 	},
 	wasteContent: {
 		flex: 1,
