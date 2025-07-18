@@ -213,28 +213,43 @@ export default function SearchScreen() {
 		inputRef.current?.focus();
 	};
 
-	const renderSearchResult = ({ item }: { item: GooglePrediction }) => (
-		<TouchableOpacity
-			style={styles.resultItem}
-			onPress={() => selectAddress(item)}
-			activeOpacity={0.7}
-		>
-			<View style={styles.resultTextContainer}>
-				<ThemedText style={styles.resultName}>
-					{item.structured_formatting.main_text}
-				</ThemedText>
-				<ThemedText style={styles.resultAddress}>
-					{item.structured_formatting.secondary_text}
-				</ThemedText>
-			</View>
-			<IconSymbol
-				name="chevron.right"
-				size={16}
-				color={`${textColor}60`}
-				style={styles.chevron}
-			/>
-		</TouchableOpacity>
-	);
+	const renderSearchResult = ({ item }: { item: GooglePrediction }) => {
+		// Extract locality and state from the terms
+		// Australia is always the last term, so:
+		// - State (administrative_area_level_1) is the second-to-last term
+		// - Locality is the third-to-last term
+		const localityTerm =
+			item.terms.length >= 3 ? item.terms[item.terms.length - 3] : null;
+		const stateTerm =
+			item.terms.length >= 2 ? item.terms[item.terms.length - 2] : null;
+
+		// Create the second line text
+		const secondLineText =
+			localityTerm && stateTerm && stateTerm.value !== "Australia"
+				? `${localityTerm.value} ${stateTerm.value}`
+				: item.structured_formatting.secondary_text;
+
+		return (
+			<TouchableOpacity
+				style={styles.resultItem}
+				onPress={() => selectAddress(item)}
+				activeOpacity={0.7}
+			>
+				<View style={styles.resultTextContainer}>
+					<ThemedText style={styles.resultName}>
+						{item.structured_formatting.main_text}
+					</ThemedText>
+					<ThemedText style={styles.resultAddress}>{secondLineText}</ThemedText>
+				</View>
+				<IconSymbol
+					name="chevron.right"
+					size={16}
+					color={`${textColor}60`}
+					style={styles.chevron}
+				/>
+			</TouchableOpacity>
+		);
+	};
 
 	return (
 		<SafeAreaView style={[styles.container, { backgroundColor }]}>
