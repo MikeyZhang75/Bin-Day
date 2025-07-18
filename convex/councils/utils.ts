@@ -13,6 +13,41 @@ import {
 	safeJsonParse,
 } from "./index";
 
+// Default headers that are common across all councils
+const DEFAULT_SEARCH_HEADERS = {
+	"User-Agent":
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+	Accept: "text/plain, */*; q=0.01",
+	"Accept-Encoding": "gzip, deflate, br, zstd",
+	"sec-ch-ua-platform": '"macOS"',
+	"x-requested-with": "XMLHttpRequest",
+	"sec-ch-ua":
+		'"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+	"sec-ch-ua-mobile": "?0",
+	"sec-fetch-site": "same-origin",
+	"sec-fetch-mode": "cors",
+	"sec-fetch-dest": "empty",
+	"accept-language": "en-GB,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6",
+	priority: "u=1, i",
+};
+
+const DEFAULT_WASTE_HEADERS = {
+	"User-Agent":
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+	Accept: "application/json, text/javascript, */*; q=0.01",
+	"Accept-Encoding": "gzip, deflate, br, zstd",
+	"sec-ch-ua-platform": '"macOS"',
+	"x-requested-with": "XMLHttpRequest",
+	"sec-ch-ua":
+		'"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+	"sec-ch-ua-mobile": "?0",
+	"sec-fetch-site": "same-origin",
+	"sec-fetch-mode": "cors",
+	"sec-fetch-dest": "empty",
+	"accept-language": "en-GB,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6",
+	priority: "u=1, i",
+};
+
 // Common type for API responses from councils using the same backend system
 export type CouncilApiResponse = {
 	Items: {
@@ -121,14 +156,13 @@ export function parseWasteCollectionDates(
 export async function searchCouncilAddress(
 	searchQuery: string,
 	councilApiUrl: string,
-	headers: HeadersInit,
 	councilName: string,
 ) {
 	const url = `${councilApiUrl}?keywords=${encodeURIComponent(searchQuery)}`;
 
 	const response = await fetch(url, {
 		method: "GET",
-		headers,
+		headers: DEFAULT_SEARCH_HEADERS,
 	});
 
 	if (!response.ok) {
@@ -143,14 +177,13 @@ export async function searchCouncilAddress(
 export async function fetchWasteServices(
 	geolocationId: string,
 	wasteServicesUrl: string,
-	headers: HeadersInit,
 	councilName: string,
 ) {
 	const url = `${wasteServicesUrl}?geolocationid=${geolocationId}&ocsvclang=en-AU`;
 
 	const wasteServicesResponse = await fetch(url, {
 		method: "GET",
-		headers,
+		headers: DEFAULT_WASTE_HEADERS,
 	});
 
 	if (!wasteServicesResponse.ok) {
@@ -170,8 +203,6 @@ export async function processCouncilData(
 	config: {
 		searchApiUrl: string;
 		wasteServicesUrl: string;
-		searchHeaders: HeadersInit;
-		wasteHeaders: HeadersInit;
 		wasteTypePatterns: WasteTypeRegexPatterns;
 	},
 ) {
@@ -185,7 +216,6 @@ export async function processCouncilData(
 		const addressData = await searchCouncilAddress(
 			searchQuery,
 			config.searchApiUrl,
-			config.searchHeaders,
 			councilName,
 		);
 
@@ -229,7 +259,6 @@ export async function processCouncilData(
 		const wasteServicesData = await fetchWasteServices(
 			selectedItem.Id,
 			config.wasteServicesUrl,
-			config.wasteHeaders,
 			councilName,
 		);
 
