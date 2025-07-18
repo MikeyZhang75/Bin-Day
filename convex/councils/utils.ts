@@ -173,7 +173,6 @@ export async function processCouncilData(
 		searchHeaders: HeadersInit;
 		wasteHeaders: HeadersInit;
 		wasteTypePatterns: WasteTypeRegexPatterns;
-		useDistanceCalculation?: boolean;
 	},
 ) {
 	// Extract address components using the utility function
@@ -197,11 +196,8 @@ export async function processCouncilData(
 
 		let selectedItem = addressData.Items[0];
 
-		// If using distance calculation and LatLon data is available
-		if (
-			config.useDistanceCalculation !== false &&
-			addressData.Items[0].LatLon
-		) {
+		// Auto-detect if we should use distance calculation based on LatLon availability
+		if (addressData.Items[0].LatLon) {
 			// Calculate distances for each item
 			const userLat = placeDetails.geometry.location.lat;
 			const userLng = placeDetails.geometry.location.lng;

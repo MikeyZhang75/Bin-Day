@@ -55,6 +55,5 @@ export async function fetchMonashData(placeDetails: GooglePlaceDetails) {
 		searchHeaders,
 		wasteHeaders,
 		wasteTypePatterns: monashWastePatterns,
-		useDistanceCalculation: true,
 	});
 }

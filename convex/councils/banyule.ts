@@ -57,6 +57,5 @@ export async function fetchBanyuleData(placeDetails: GooglePlaceDetails) {
 		searchHeaders,
 		wasteHeaders,
 		wasteTypePatterns: banyuleWastePatterns,
-		useDistanceCalculation: true,
 	});
 }

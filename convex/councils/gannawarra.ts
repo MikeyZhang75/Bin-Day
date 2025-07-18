@@ -51,7 +51,7 @@ const wasteHeaders = {
 
 export async function fetchGannawarraData(placeDetails: GooglePlaceDetails) {
 	// Note: Gannawarra API returns null for LatLon in some cases
-	// We disable distance calculation for this council
+	// Distance calculation will be automatically skipped when LatLon is null
 	return processCouncilData(placeDetails, COUNCIL_NAMES.GANNAWARRA_SHIRE, {
 		searchApiUrl: "https://www.gannawarra.vic.gov.au/api/v1/myarea/search",
 		wasteServicesUrl:
@@ -59,6 +59,5 @@ export async function fetchGannawarraData(placeDetails: GooglePlaceDetails) {
 		searchHeaders,
 		wasteHeaders,
 		wasteTypePatterns: gannawarraWastePatterns,
-		useDistanceCalculation: false, // Gannawarra often returns null for LatLon
 	});
 }
