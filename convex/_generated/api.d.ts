@@ -25,6 +25,7 @@ import type * as councils_errors from "../councils/errors.js";
 import type * as councils_gannawarra from "../councils/gannawarra.js";
 import type * as councils_index from "../councils/index.js";
 import type * as councils_monash from "../councils/monash.js";
+import type * as councils_shepparton from "../councils/shepparton.js";
 import type * as councils_types from "../councils/types.js";
 import type * as googlePlaces from "../googlePlaces.js";
 
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   "councils/gannawarra": typeof councils_gannawarra;
   "councils/index": typeof councils_index;
   "councils/monash": typeof councils_monash;
+  "councils/shepparton": typeof councils_shepparton;
   "councils/types": typeof councils_types;
   googlePlaces: typeof googlePlaces;
 }>;
