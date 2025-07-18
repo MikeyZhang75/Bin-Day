@@ -1,10 +1,20 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides comprehensive guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-This is a React Native Expo application called "bin-day" that helps users find waste collection information for their addresses. Built with Expo Router (v5), React Native 0.79.5, and TypeScript, the app uses Convex as a backend service and follows Expo's file-based routing pattern.
+"bin-day" is a React Native Expo application that helps Victorian residents find waste collection information for their addresses. The app integrates with various Victorian council APIs to provide real-time waste collection dates, supporting multiple waste types including landfill, recycling, organics, hard waste, and glass recycling.
+
+**Tech Stack**:
+
+- React Native 0.79.5 with Expo SDK 53
+- TypeScript 5.8.3 with strict mode
+- Expo Router 5.1.3 for file-based routing
+- Convex 1.25.2 for backend services
+- Zustand 5.0.2 for state management
+- React Native Reanimated 3.17.4 for animations
+- Luxon 3.7.1 for date handling
 
 ## Development Commands
 
@@ -38,177 +48,281 @@ The project uses both ESLint and Biome for code quality:
 
 Note: Biome is configured with tab indentation and double quotes for strings.
 
-## Architecture
+## Project Structure
 
-### Routing Structure
+### Configuration Files
 
-The app uses Expo Router's file-based routing:
+- **package.json**: Project metadata, scripts, and dependencies
+- **tsconfig.json**: TypeScript configuration with strict mode and `@/*` path alias
+- **biome.json**: Code formatting and linting rules (tab indentation, double quotes)
+- **eslint.config.js**: ESLint configuration using expo preset
+- **app.json**: Expo configuration with app metadata, build settings, and plugins
+- **eas.json**: EAS build profiles for development, preview, and production
+- **.vscode/settings.json**: VSCode settings for Biome integration
 
-- `app/_layout.tsx` - Root layout with theme provider, font loading, and Convex provider
-- `app/(tabs)/_layout.tsx` - Tab navigation layout with Home, Explore, and Search tabs
-- `app/(tabs)/index.tsx` - Home tab screen
-- `app/(tabs)/explore.tsx` - Explore tab screen
-- `app/(tabs)/search.tsx` - Search tab screen with Google Places integration
-- `app/+not-found.tsx` - 404 screen
+### App Entry Points
 
-### Key Architectural Patterns
+- **app/\_layout.tsx**: Root layout providing Convex client, theme provider, and font loading
+- **app/index.tsx**: Main home screen with address search and waste collection display
+- **app/+not-found.tsx**: 404 error screen
 
-1. **State Management**
+### Components Structure
 
-   - Uses Zustand for global state management (`stores/appStore.ts`)
-   - Structured into search, address, and council data states
-   - Devtools integration for debugging
+#### Core Components
 
-2. **Theming System**
+- **ThemedText.tsx**: Text component with theme support and typography variants
+- **ThemedView.tsx**: View component with automatic theme-based background colors
+- **SwipeableModal.tsx**: Swipeable bottom sheet modal with gesture support
+- **HapticTab.tsx**: Tab component with haptic feedback (iOS only)
+- **UnsupportedCouncilCard.tsx**: Card for displaying unsupported council messages
 
-   - Dark/light mode support via `useColorScheme` hook
-   - Themed components in `components/` (ThemedText, ThemedView)
-   - Color definitions in `constants/Colors.ts`
+#### Address Components (`components/address/`)
 
-3. **Animation System**
+- **AddressDisplay.tsx**: Displays selected address with council information
 
-   - Unified animation system using React Native Reanimated 3
-   - Consistent bezier curves `(0.25, 0.1, 0.25, 1)` across all animations
-   - Standard duration of 350ms with smooth transitions
-   - Custom `useAnimations` hook for coordinated animations
-   - Memory management with animation cleanup on unmount
-   - See `docs/ANIMATION_SYSTEM.md` for detailed documentation
+#### Common Components (`components/common/`)
 
-4. **Component Organization**
+- **EmptyState.tsx**: Empty state UI with search prompt
+- **ErrorBoundary.tsx**: React error boundary for error handling
+- **ErrorMessage.tsx**: Error message display with retry option
 
-   - UI components in `components/ui/` (platform-specific implementations)
-   - Reusable components directly in `components/`:
-     - `SwipeableModal.tsx` - Customizable modal with swipe-to-dismiss, animated overlay, render prop support, theme-aware drag indicator, and configurable animation constants
-     - `UnsupportedCouncilCard.tsx` - Card component for displaying unsupported council information
-   - Search components in `components/search/`:
-     - `SearchResults.tsx` - Optimized FlatList with memoization and performance enhancements
-     - `SearchResultItem.tsx` - Individual search result display
-   - Waste components in `components/waste/`:
-     - `WasteCard.tsx` - Individual waste collection date display
-     - `WasteCollectionGrid.tsx` - Grid layout for waste cards
-   - Custom hooks in `hooks/`:
-     - `useAddressSearch.ts` - Address search logic with debouncing
-     - `useAnimations.ts` - Animation management
-     - `useCouncilData.ts` - Council data fetching
+#### Search Components (`components/search/`)
 
-5. **Platform-Specific Code**
+- **SearchBar.tsx**: Animated search input with focus states
+- **SearchResults.tsx**: Optimized FlatList for search results
+- **SearchResultItem.tsx**: Individual search result item
 
-   - `.ios.tsx` and `.tsx` file extensions for platform variants
-   - Platform.select() for inline platform branching
+#### Waste Components (`components/waste/`)
 
-6. **TypeScript Configuration**
+- **WasteCard.tsx**: Individual waste collection card with date display
+- **WasteCollectionGrid.tsx**: Grid layout for waste collection cards
 
-   - Strict mode enabled
-   - Path alias `@/*` maps to project root
-   - Typed routes via Expo's experimental feature
+#### UI Components (`components/ui/`)
 
-7. **Convex Backend**
-   - Generated types in `convex/_generated/`
-   - Backend functions in `convex/` directory:
-     - `councilServices.ts` - Council data fetching logic with WasteCollectionDates type
-     - `councils/index.ts` - Central export file for council-related modules
-     - `councils/types.ts` - Council types, constants, and validation utilities
-     - `councils/errors.ts` - Standardized error classes and utilities for council implementations
-     - `councils/[councilName].ts` - Individual council implementations
-     - `googlePlaces.ts` - Google Places API integration
-   - Use Convex React hooks for data fetching
+- **IconSymbol.tsx**: Cross-platform icon component (Material Icons)
+- **IconSymbol.ios.tsx**: iOS-specific SF Symbols implementation
+- **TabBarBackground.tsx**: Tab bar background (Android/Web)
+- **TabBarBackground.ios.tsx**: iOS blur tab bar background
 
-### External API Integrations
+### Custom Hooks
 
-1. **Google Places API**
+- **useColorScheme.ts**: Platform-specific color scheme detection
+- **useColorScheme.web.ts**: Web-specific color scheme with hydration support
+- **useThemeColor.ts**: Theme color resolution hook
+- **useAddressSearch.ts**: Address search logic with Google Places integration
+- **useAnimations.ts**: Unified animation management with Reanimated
+- **useCouncilData.ts**: Council data fetching and caching
+- **useWasteSorting.ts**: Waste collection date sorting logic
 
-   - Autocomplete for address search
-   - Place details fetching
-   - Configured in `convex/googlePlaces.ts`
+### State Management
 
-2. **Council APIs**
-   - Individual council implementations in `convex/councils/`
-   - Extensible pattern for adding more councils
-   - Error handling with custom error classes
+- **stores/appStore.ts**: Zustand store with three main slices:
+  - **search**: Search query, results, focus state, session token
+  - **address**: Selected address, place details, council information
+  - **councilData**: Waste collection data, loading states, errors
 
 ### Utilities
 
-- `lib/addressExtractor.ts` - Extract address components from Google Places data and format search addresses (supports council-specific formatting)
-- `lib/distance.ts` - Calculate distances between coordinates
-- `lib/env.ts` - Environment variable validation with envalid
+- **constants/Colors.ts**: Theme color definitions for light/dark modes
+- **lib/addressExtractor.ts**: Extract and format address components from Google Places
+- **lib/distance.ts**: Haversine formula for distance calculations
+- **lib/env.ts**: Environment variable validation using Zod
+- **utils/dateFormatters.ts**: Date formatting utilities for waste collection dates
+- **types/googlePlaces.ts**: TypeScript types for Google Places API
 
-## GitHub Actions
+### Backend Services (Convex)
 
-The project uses GitHub Actions for automated code review:
+#### Core Services
 
-- **Claude Code Review** (`.github/workflows/claude-code-review.yml`):
-  - Runs on pull requests
-  - Performs type checking, linting, and Biome formatting checks
-  - Only runs Claude review if all checks pass
-  - Provides helpful job summaries on failure
+- **googlePlaces.ts**: Google Places API integration (autocomplete, place details)
+- **councilServices.ts**: Main council data fetching orchestrator
 
-## Performance Optimizations
+#### Council Core (`convex/councils/core/`)
 
-- **FlatList Optimization**: Search results use memoized callbacks and `removeClippedSubviews`
-- **Animation Cleanup**: Proper cleanup of animations on component unmount
-- **Debounced Search**: Address search with 100ms debounce to reduce API calls
+- **types.ts**: Council names constants and validation
+- **errors.ts**: Standardized error classes (CouncilAPIError, AddressNotFoundError)
+- **utils.ts**: Common utilities for council API integration
+- **addressFormatter.ts**: Council-specific address formatting
+
+#### Council Implementations (`convex/councils/implementations/`)
+
+Each council has its own implementation file following one of two patterns:
+
+1. **Standard Pattern** (e.g., monash.ts): Uses shared `processCouncilData` utility
+2. **Custom Pattern** (e.g., bawBawShire.ts): Custom API integration for unique council systems
+
+Currently supports 32 Victorian councils with standardized waste collection data format.
+
+### GitHub Actions
+
+- **claude-code-review.yml**: Automated PR review with type checking, linting, and Claude analysis
+- **claude.yml**: Interactive Claude bot for issue/PR comments
+
+## Architecture Patterns
+
+### 1. State Management Architecture
+
+The app uses Zustand with a clear separation of concerns:
+
+- **Search State**: Manages address search functionality
+- **Address State**: Stores selected address and council information
+- **Council Data State**: Handles waste collection data fetching
+
+### 2. Animation System
+
+Unified animation system using React Native Reanimated 3:
+
+- Consistent bezier curves `(0.25, 0.1, 0.25, 1)`
+- Standard 350ms duration
+- Coordinated animations through `useAnimations` hook
+- Proper cleanup on unmount to prevent memory leaks
+
+### 3. Component Patterns
+
+- **Memoization**: React.memo for performance optimization
+- **Display Names**: All memoized components have display names
+- **TypeScript**: Strict typing for all props and state
+- **Platform-Specific**: `.ios.tsx` extensions for iOS-specific code
+
+### 4. Error Handling
+
+- **Error Boundaries**: Catch and display React errors gracefully
+- **API Errors**: Standardized error classes for council APIs
+- **User Feedback**: Clear error messages with retry options
+
+### 5. Performance Optimizations
+
+- **FlatList**: Optimized with `getItemLayout`, `removeClippedSubviews`
+- **Debouncing**: 100ms debounce on address search
+- **Memoization**: useMemo and useCallback for expensive operations
+- **Animation Cleanup**: Proper cleanup to prevent memory leaks
+
+## API Integrations
+
+### Google Places API
+
+- **Autocomplete**: Address search with Victorian bounds restriction
+- **Place Details**: Fetch full address components and coordinates
+- **Session Tokens**: Proper session token management for billing
+
+### Council APIs
+
+Two main integration patterns:
+
+1. **Standard Pattern**: Most councils use a common API structure
+
+   - Search endpoint: `/api/v1/myarea/search`
+   - Waste services endpoint: `/ocapi/Public/myarea/wasteservices`
+   - Shared utilities in `processCouncilData`
+
+2. **Custom Pattern**: Some councils (e.g., Baw Baw) have unique APIs
+   - Custom session management
+   - Multiple API calls for data retrieval
+   - Council-specific date parsing
 
 ## Development Guidelines
 
-1. **Import Paths**: Always use the `@/` alias for imports (e.g., `@/components/ThemedView`)
+### 1. Import Convention
 
-2. **Styling**: Follow existing patterns using StyleSheet.create() and theme-aware colors
+Always use the `@/*` alias for imports:
 
-3. **New Features**: When adding new screens, create them in the appropriate directory under `app/` to maintain routing structure
+```typescript
+import { ThemedView } from "@/components/ThemedView";
+```
 
-4. **Backend Integration**: Define Convex functions in the `convex/` directory and use generated types from `convex/_generated/`
+### 2. Styling Guidelines
 
-5. **Testing**: No test framework is currently configured. If tests are needed, suggest setting up Jest with React Native Testing Library.
+- Use `StyleSheet.create()` for all styles
+- Use theme-aware colors from `useThemeColor`
+- Follow existing component patterns
 
-6. **Environment Variables**:
+### 3. TypeScript Best Practices
 
-   - Use `envalid` for validation in `lib/env.ts`
-   - Prefix client-side variables with `EXPO_PUBLIC_`
-   - Store sensitive API keys in Convex environment variables
+- Enable strict mode checks
+- Define explicit types for all props
+- Use type imports where possible
 
-7. **Git Branch Naming Convention**:
+### 4. Component Guidelines
 
-   - `feat/` - for new features (e.g., `feat/add-baw-baw-shire-council`)
-   - `fix/` - for bug fixes (e.g., `fix/address-search-error`)
-   - `chore/` - for maintenance tasks (e.g., `chore/update-dependencies`)
-   - `docs/` - for documentation (e.g., `docs/api-integration-guide`)
-   - Use hyphens to separate words in branch names
+- Use React.memo for list items
+- Implement proper TypeScript types
+- Follow animation patterns with Reanimated
+- Add accessibility props (labels, hints)
 
-8. **Component Best Practices**:
-   - Use React.memo with display names for performance optimization
-   - Implement proper TypeScript types for all props
-   - Follow the existing animation patterns using Reanimated 3
+### 5. Backend Integration
+
+- Define Convex functions in `convex/` directory
+- Use generated types from `convex/_generated/`
+- Handle errors with standardized error classes
+
+### 6. Environment Variables
+
+- Client-side: Prefix with `EXPO_PUBLIC_`
+- Server-side: Store in Convex environment
+- Validate with Zod in `lib/env.ts`
+
+### 7. Git Branch Naming
+
+- `feat/` - New features
+- `fix/` - Bug fixes
+- `chore/` - Maintenance
+- `docs/` - Documentation
+
+### 8. Performance Considerations
+
+- Minimize re-renders with proper memoization
+- Use FlatList optimizations for lists
+- Implement proper loading states
+- Clean up animations on unmount
 
 ## Adding a New Council
 
-1. Create a new file in `convex/councils/[councilName].ts`
-2. Implement the `fetch[CouncilName]Data` function following the existing pattern
-3. Add the council to the `SUPPORTED_COUNCILS` array in `convex/councils/types.ts`
-4. Add the council handler to `convex/councilServices.ts`
-5. Update the supported councils list in README.md
+1. **Check API Pattern**: Determine if the council uses standard or custom API
+2. **Create Implementation**: Add file in `convex/councils/implementations/[councilName].ts`
+3. **Update Types**: Add council name to `COUNCIL_NAMES` in `convex/councils/core/types.ts`
+4. **Register Handler**: Add handler to `councilHandlers` in `convex/councilServices.ts`
+5. **Update Schema**: Add council literal to Convex schema in `councilServices.ts`
+6. **Test Implementation**: Verify with real addresses
+7. **Update Documentation**: Add to supported councils list
 
-## Environment Setup
+### Standard Implementation Example
 
-The project includes:
+```typescript
+export async function fetchCouncilData(placeDetails: GooglePlaceDetails) {
+  return processCouncilData(placeDetails, COUNCIL_NAMES.COUNCIL_NAME, {
+    searchApiUrl: "https://council.vic.gov.au/api/v1/myarea/search",
+    wasteServicesUrl:
+      "https://council.vic.gov.au/ocapi/Public/myarea/wasteservices",
+    wasteTypePatterns: {
+      landfillWaste: /pattern/,
+      recycling: /pattern/,
+      // ... other patterns
+    },
+  });
+}
+```
 
-- Expo SDK 53
-- React 19.0.0
-- React Native 0.79.5
-- TypeScript 5.8.3
-- Convex 1.25.2
-- React Native Reanimated 3.17.5
-- Zustand 5.0.2 (state management)
-- Biome 2.1.1 (for formatting/linting)
-- Luxon 3.5.0 (for date/time handling)
-- envalid 8.0.0 (for environment validation)
-- uuid 11.0.5 (for generating unique identifiers)
+## Waste Collection Data Format
+
+All councils return data in this standardized format:
+
+```typescript
+type WasteCollectionDates = {
+  landfillWaste: number | null; // Unix timestamp
+  recycling: number | null; // Unix timestamp
+  foodAndGardenWaste: number | null; // Unix timestamp
+  hardWaste: number | null; // Unix timestamp
+  glass: number | null; // Unix timestamp
+};
+```
 
 ## Development Warnings
 
-- Do not run `bun run dev`, `bunx convex dev` or any related server starting command.
-- Do not run `git` related bash commands UNDER ANY CIRCUMSTANCES, unless I instructed you to do so.
+- Do not run `bun run dev`, `bunx convex dev` or any related server starting command
+- Do not run `git` related bash commands UNDER ANY CIRCUMSTANCES, unless explicitly instructed
+- The app currently supports Victorian councils only (locationrestriction in Google Places)
 
-# important-instruction-reminders
+## Important Instruction Reminders
 
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.

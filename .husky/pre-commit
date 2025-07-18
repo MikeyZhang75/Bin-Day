@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# Run biome check with fixes
+echo "Running biome check with fixes..."
+bun run check:fix
+
+# Stage any files that were modified by check:fix
+# This ensures that any automatic fixes are included in the commit
+git add -A
+
+# Run lint check
+echo "Running lint check..."
+bun run lint
+if [ $? -ne 0 ]; then
+  echo "❌ Lint check failed. Please fix the errors before committing."
+  exit 1
+fi
+
+# Run type check
+echo "Running type check..."
+bun run check-types
+if [ $? -ne 0 ]; then
+  echo "❌ Type check failed. Please fix the type errors before committing."
+  exit 1
+fi
+
+echo "✅ All checks passed!"
