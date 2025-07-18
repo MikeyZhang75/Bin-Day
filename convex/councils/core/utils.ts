@@ -1,18 +1,16 @@
 import { DateTime } from "luxon";
-import {
-	extractAddressComponents,
-	getSearchAddress,
-} from "@/lib/addressExtractor";
+import { extractAddressComponents } from "@/lib/addressExtractor";
 import { calculateDistance } from "@/lib/distance";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../../councilServices";
+import { getSearchAddress } from "./addressFormatter";
 import {
 	AddressNotFoundError,
 	CouncilAPIError,
-	type CouncilName,
 	logError,
 	safeJsonParse,
-} from "./index";
+} from "./errors";
+import type { CouncilName } from "./types";
 
 // Default headers that are common across all councils
 const DEFAULT_SEARCH_HEADERS = {

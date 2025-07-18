@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as councilServices from "../councilServices.js";
+import type * as councils_core_addressFormatter from "../councils/core/addressFormatter.js";
 import type * as councils_core_errors from "../councils/core/errors.js";
 import type * as councils_core_index from "../councils/core/index.js";
 import type * as councils_core_types from "../councils/core/types.js";
@@ -63,6 +64,7 @@ import type * as googlePlaces from "../googlePlaces.js";
  */
 declare const fullApi: ApiFromModules<{
   councilServices: typeof councilServices;
+  "councils/core/addressFormatter": typeof councils_core_addressFormatter;
   "councils/core/errors": typeof councils_core_errors;
   "councils/core/index": typeof councils_core_index;
   "councils/core/types": typeof councils_core_types;

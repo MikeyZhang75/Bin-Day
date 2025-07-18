@@ -1,8 +1,5 @@
 import { DateTime } from "luxon";
-import {
-	extractAddressComponents,
-	getSearchAddress,
-} from "@/lib/addressExtractor";
+import { extractAddressComponents } from "@/lib/addressExtractor";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import type { WasteCollectionDates } from "../../councilServices";
 import {
@@ -12,6 +9,7 @@ import {
 	logError,
 	safeJsonParse,
 } from "../core";
+import { getSearchAddress } from "../core/addressFormatter";
 
 type BallaratApiResponse = {
 	nhits: number;
