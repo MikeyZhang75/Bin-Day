@@ -30,7 +30,7 @@ export const autocomplete = action({
 			sessiontoken: sessionToken,
 			components: "country:au",
 			types: "address",
-			locationrestriction: `rectangle:-39.2,141.0|-34.0,150.0`,
+			locationrestriction: "rectangle:-39.2,141.0|-34.0,150.0",
 		});
 
 		const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params}`;
