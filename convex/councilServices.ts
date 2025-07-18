@@ -11,6 +11,7 @@ import { fetchCampaspeData } from "./councils/campaspe";
 import { fetchDandenongData } from "./councils/dandenong";
 import { fetchGannawarraData } from "./councils/gannawarra";
 import { fetchMonashData } from "./councils/monash";
+import { fetchSheppartonData } from "./councils/shepparton";
 
 export type WasteCollectionDates = {
 	landfillWaste: number | null;
@@ -41,6 +42,7 @@ const councilHandlers: Record<
 	[COUNCIL_NAMES.BAYSIDE_CITY]: fetchBaysideData,
 	[COUNCIL_NAMES.CAMPASPE_SHIRE]: fetchCampaspeData,
 	[COUNCIL_NAMES.GREATER_DANDENONG]: fetchDandenongData,
+	[COUNCIL_NAMES.SHEPPARTON]: fetchSheppartonData,
 };
 
 export const getCouncilData = action({
@@ -55,6 +57,7 @@ export const getCouncilData = action({
 			v.literal(COUNCIL_NAMES.BAYSIDE_CITY),
 			v.literal(COUNCIL_NAMES.CAMPASPE_SHIRE),
 			v.literal(COUNCIL_NAMES.GREATER_DANDENONG),
+			v.literal(COUNCIL_NAMES.SHEPPARTON),
 		),
 		placeDetails: v.object({
 			address_components: v.array(
