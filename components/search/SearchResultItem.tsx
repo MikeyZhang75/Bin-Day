@@ -51,6 +51,8 @@ export const SearchResultItem = React.memo(
 	},
 );
 
+SearchResultItem.displayName = "SearchResultItem";
+
 const styles = StyleSheet.create({
 	resultItem: {
 		flexDirection: "row",

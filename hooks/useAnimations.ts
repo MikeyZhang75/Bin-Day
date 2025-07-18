@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+	cancelAnimation,
 	Easing,
 	runOnJS,
 	useSharedValue,
@@ -88,7 +89,27 @@ export function useAnimations() {
 		});
 	};
 
-	// Cleanup is handled automatically by Reanimated
+	// Cleanup is handled automatically by Reanimated, but for complex scenarios
+	// we can manually cancel animations on unmount
+	useEffect(() => {
+		return () => {
+			// Cancel all running animations on unmount to prevent memory leaks
+			// This is especially important for complex animation chains
+			cancelAnimation(fadeAnim);
+			cancelAnimation(emptyStateFadeAnim);
+			cancelAnimation(resultsOpacityAnim);
+			cancelAnimation(resultsScaleAnim);
+			cancelAnimation(inputFocusAnim);
+			cancelAnimation(blurOpacityAnim);
+		};
+	}, [
+		fadeAnim,
+		emptyStateFadeAnim,
+		resultsOpacityAnim,
+		resultsScaleAnim,
+		inputFocusAnim,
+		blurOpacityAnim,
+	]);
 
 	return {
 		// Animation values

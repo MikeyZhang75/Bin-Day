@@ -139,6 +139,14 @@ export default function HomeScreen() {
 		}
 	}, [selectedAddress, animateFadeIn]);
 
+	// Cleanup search results on unmount
+	useEffect(() => {
+		return () => {
+			// Clear search results immediately on unmount to free memory
+			clearSearch();
+		};
+	}, [clearSearch]);
+
 	// Search handlers
 	const handleSearchQueryChange = (text: string) => {
 		searchForAddress(text);

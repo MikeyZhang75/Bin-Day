@@ -91,6 +91,8 @@ export const WasteCard = React.memo(
 	},
 );
 
+WasteCard.displayName = "WasteCard";
+
 const styles = StyleSheet.create({
 	wasteCard: {
 		flexDirection: "row",

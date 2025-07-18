@@ -48,6 +48,8 @@ export const ErrorMessage = React.memo(
 	},
 );
 
+ErrorMessage.displayName = "ErrorMessage";
+
 const styles = StyleSheet.create({
 	container: {
 		borderRadius: 12,

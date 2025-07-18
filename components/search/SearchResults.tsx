@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -35,6 +36,40 @@ export function SearchResults({
 		};
 	});
 
+	// Memoize data to prevent unnecessary re-renders
+	const displayData = useMemo(() => searchResults.slice(0, 3), [searchResults]);
+
+	// Memoize callbacks
+	const renderItem = useCallback(
+		({ item }: { item: GooglePrediction }) => (
+			<SearchResultItem
+				prediction={item}
+				onPress={() => onSelectAddress(item)}
+			/>
+		),
+		[onSelectAddress],
+	);
+
+	const keyExtractor = useCallback(
+		(item: GooglePrediction) => item.place_id,
+		[],
+	);
+
+	// Optimized getItemLayout with correct separator calculations
+	const getItemLayout = useCallback(
+		(_: ArrayLike<GooglePrediction> | null | undefined, index: number) => ({
+			length: 72, // minHeight from SearchResultItem styles
+			offset: 72 * index + index, // Account for 1px separator between items
+			index,
+		}),
+		[],
+	);
+
+	const itemSeparatorComponent = useCallback(
+		() => <View style={[styles.separator, { backgroundColor: borderColor }]} />,
+		[borderColor],
+	);
+
 	// Don't unmount immediately to allow exit animation
 	if (searchResults.length === 0) {
 		return null;
@@ -58,26 +93,17 @@ export function SearchResults({
 				onResponderTerminationRequest={() => false}
 			>
 				<FlatList
-					data={searchResults.slice(0, 3)}
-					renderItem={({ item }) => (
-						<SearchResultItem
-							prediction={item}
-							onPress={() => onSelectAddress(item)}
-						/>
-					)}
-					keyExtractor={(item) => item.place_id}
+					data={displayData}
+					renderItem={renderItem}
+					keyExtractor={keyExtractor}
 					keyboardShouldPersistTaps="always"
 					scrollEnabled={false}
-					getItemLayout={(data, index) => ({
-						length: 72, // minHeight from SearchResultItem styles
-						offset: 72 * index + (index > 0 ? index : 0), // Add separator height
-						index,
-					})}
-					ItemSeparatorComponent={() => (
-						<View
-							style={[styles.separator, { backgroundColor: borderColor }]}
-						/>
-					)}
+					removeClippedSubviews={true}
+					initialNumToRender={3}
+					maxToRenderPerBatch={3}
+					windowSize={3}
+					getItemLayout={getItemLayout}
+					ItemSeparatorComponent={itemSeparatorComponent}
 				/>
 			</Animated.View>
 		</View>
