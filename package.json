@@ -11,7 +11,8 @@
 		"start": "expo start --no-dev --minify",
 		"check:fix": "biome check --write",
 		"check-types": "tsc --noEmit",
-		"build:simulator:ios": "eas build --profile ios-simulator --platform ios"
+		"build:simulator:ios": "eas build --profile ios-simulator --platform ios",
+		"prepare": "husky"
 	},
 	"dependencies": {
 		"@expo/vector-icons": "^14.1.0",
@@ -55,6 +56,7 @@
 		"@types/uuid": "^10.0.0",
 		"eslint": "^9.25.0",
 		"eslint-config-expo": "~9.2.0",
+		"husky": "^9.1.7",
 		"typescript": "~5.8.3"
 	},
 	"private": true
