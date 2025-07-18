@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from "uuid";
 import { AddressDisplay } from "@/components/address/AddressDisplay";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
 import { SearchBar } from "@/components/search/SearchBar";
 import { SearchResults } from "@/components/search/SearchResults";
 // Internal imports
@@ -43,6 +44,7 @@ export default function HomeScreen() {
 	const isSearching = useAppStore((state) => state.search.isSearching);
 	const isFocused = useAppStore((state) => state.search.isFocused);
 	const showResults = useAppStore((state) => state.search.showResults);
+	const searchError = useAppStore((state) => state.search.error);
 	const selectedAddress = useAppStore((state) => state.address.selected);
 	const placeDetails = useAppStore((state) => state.address.placeDetails);
 	const council = useAppStore((state) => state.address.council);
@@ -210,6 +212,14 @@ export default function HomeScreen() {
 													onSelectAddress={handleAddressSelect}
 													resultsOpacityAnim={resultsOpacityAnim}
 													resultsScaleAnim={resultsScaleAnim}
+												/>
+											)}
+
+											{/* Error Message */}
+											{searchError && (
+												<ErrorMessage
+													message={searchError}
+													onRetry={() => searchForAddress(searchQuery)}
 												/>
 											)}
 										</View>

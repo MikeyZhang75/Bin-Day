@@ -63,6 +63,7 @@ export function SearchBar({
 			onPress={() => {
 				inputRef.current?.focus();
 			}}
+			accessible={false}
 		>
 			<Animated.View
 				style={[
@@ -104,9 +105,20 @@ export function SearchBar({
 					returnKeyType="search"
 					autoCorrect={false}
 					autoCapitalize="none"
+					accessible={true}
+					accessibilityLabel="Search for address or postcode"
+					accessibilityHint="Enter your address to find waste collection dates"
+					blurOnSubmit={false}
+					clearButtonMode="never"
 				/>
 				{searchQuery.length > 0 && (
-					<Pressable onPress={onClear} style={styles.clearButton}>
+					<Pressable
+						onPress={onClear}
+						style={styles.clearButton}
+						accessible={true}
+						accessibilityLabel="Clear search"
+						accessibilityHint="Clear the search input"
+					>
 						<IconSymbol
 							name="xmark.circle.fill"
 							size={20}

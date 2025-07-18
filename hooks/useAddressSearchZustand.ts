@@ -1,5 +1,5 @@
 import { useAction } from "convex/react";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { Keyboard } from "react-native";
 import { v4 as uuidv4 } from "uuid";
 import { api } from "@/convex/_generated/api";
@@ -24,6 +24,10 @@ export function useAddressSearchZustand() {
 	const clearSearchAction = useAppStore((state) => state.clearSearch);
 	const clearAddressAction = useAppStore((state) => state.clearAddress);
 	const setSearchFocused = useAppStore((state) => state.setSearchFocused);
+	const setSearchError = useAppStore((state) => state.setSearchError);
+
+	// Debounce timer ref
+	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const searchForAddress = useCallback(
 		async (query: string) => {
@@ -34,19 +38,37 @@ export function useAddressSearchZustand() {
 				return;
 			}
 
-			try {
-				const response = await autocomplete({
-					input: query,
-					sessionToken,
-				});
-
-				setSearchResults(response.predictions);
-			} catch (error) {
-				console.error("Autocomplete error:", error);
-				setSearchResults([]);
+			// Clear previous timeout
+			if (debounceRef.current) {
+				clearTimeout(debounceRef.current);
 			}
+
+			// Set new timeout for debounced search
+			debounceRef.current = setTimeout(async () => {
+				try {
+					setSearchError(null); // Clear any previous errors
+					const response = await autocomplete({
+						input: query,
+						sessionToken,
+					});
+
+					setSearchResults(response.predictions);
+				} catch (error) {
+					console.error("Autocomplete error:", error);
+					setSearchResults([]);
+					setSearchError(
+						"Unable to search addresses. Please check your connection and try again.",
+					);
+				}
+			}, 300);
 		},
-		[sessionToken, autocomplete, setSearchQuery, setSearchResults],
+		[
+			sessionToken,
+			autocomplete,
+			setSearchQuery,
+			setSearchResults,
+			setSearchError,
+		],
 	);
 
 	const selectAddress = useCallback(

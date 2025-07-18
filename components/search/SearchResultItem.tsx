@@ -1,3 +1,4 @@
+import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -9,44 +10,46 @@ interface SearchResultItemProps {
 	onPress: () => void;
 }
 
-export function SearchResultItem({
-	prediction,
-	onPress,
-}: SearchResultItemProps) {
-	const tintColor = useThemeColor({}, "tint");
+export const SearchResultItem = React.memo(
+	({ prediction, onPress }: SearchResultItemProps) => {
+		const tintColor = useThemeColor({}, "tint");
 
-	const localityTerm =
-		prediction.terms.length >= 3
-			? prediction.terms[prediction.terms.length - 3]
-			: null;
-	const stateTerm =
-		prediction.terms.length >= 2
-			? prediction.terms[prediction.terms.length - 2]
-			: null;
+		const localityTerm =
+			prediction.terms.length >= 3
+				? prediction.terms[prediction.terms.length - 3]
+				: null;
+		const stateTerm =
+			prediction.terms.length >= 2
+				? prediction.terms[prediction.terms.length - 2]
+				: null;
 
-	const secondLineText =
-		localityTerm && stateTerm && stateTerm.value !== "Australia"
-			? `${localityTerm.value} ${stateTerm.value}`
-			: prediction.structured_formatting.secondary_text;
+		const secondLineText =
+			localityTerm && stateTerm && stateTerm.value !== "Australia"
+				? `${localityTerm.value} ${stateTerm.value}`
+				: prediction.structured_formatting.secondary_text;
 
-	return (
-		<TouchableOpacity
-			style={styles.resultItem}
-			onPress={onPress}
-			activeOpacity={0.7}
-		>
-			<View style={styles.resultIconContainer}>
-				<IconSymbol name="location" size={20} color={tintColor} />
-			</View>
-			<View style={styles.resultTextContainer}>
-				<ThemedText style={styles.resultName}>
-					{prediction.structured_formatting.main_text}
-				</ThemedText>
-				<ThemedText style={styles.resultAddress}>{secondLineText}</ThemedText>
-			</View>
-		</TouchableOpacity>
-	);
-}
+		return (
+			<TouchableOpacity
+				style={styles.resultItem}
+				onPress={onPress}
+				activeOpacity={0.7}
+				accessible={true}
+				accessibilityLabel={`Select address: ${prediction.structured_formatting.main_text}`}
+				accessibilityHint={"Select this address to view waste collection dates"}
+			>
+				<View style={styles.resultIconContainer}>
+					<IconSymbol name="location" size={20} color={tintColor} />
+				</View>
+				<View style={styles.resultTextContainer}>
+					<ThemedText style={styles.resultName}>
+						{prediction.structured_formatting.main_text}
+					</ThemedText>
+					<ThemedText style={styles.resultAddress}>{secondLineText}</ThemedText>
+				</View>
+			</TouchableOpacity>
+		);
+	},
+);
 
 const styles = StyleSheet.create({
 	resultItem: {

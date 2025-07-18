@@ -13,6 +13,7 @@ interface SearchState {
 	isFocused: boolean;
 	showResults: boolean;
 	sessionToken: string;
+	error: string | null;
 }
 
 interface AddressState {
@@ -42,6 +43,7 @@ interface AppActions {
 	setSearching: (searching: boolean) => void;
 	setShowResults: (show: boolean) => void;
 	setSessionToken: (token: string) => void;
+	setSearchError: (error: string | null) => void;
 	clearSearch: () => void;
 
 	// Address actions
@@ -73,6 +75,7 @@ export const useAppStore = create<AppStore>()(
 				isFocused: false,
 				showResults: false,
 				sessionToken: "",
+				error: null,
 			},
 			address: {
 				selected: null,
@@ -121,6 +124,11 @@ export const useAppStore = create<AppStore>()(
 					search: { ...state.search, sessionToken },
 				})),
 
+			setSearchError: (error) =>
+				set((state) => ({
+					search: { ...state.search, error },
+				})),
+
 			clearSearch: () =>
 				set((state) => ({
 					search: {
@@ -128,6 +136,7 @@ export const useAppStore = create<AppStore>()(
 						query: "",
 						results: [],
 						showResults: false,
+						error: null,
 					},
 				})),
 

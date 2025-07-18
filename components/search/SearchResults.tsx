@@ -68,6 +68,11 @@ export function SearchResults({
 					keyExtractor={(item) => item.place_id}
 					keyboardShouldPersistTaps="always"
 					scrollEnabled={false}
+					getItemLayout={(data, index) => ({
+						length: 72, // minHeight from SearchResultItem styles
+						offset: 72 * index + (index > 0 ? index : 0), // Add separator height
+						index,
+					})}
 					ItemSeparatorComponent={() => (
 						<View
 							style={[styles.separator, { backgroundColor: borderColor }]}

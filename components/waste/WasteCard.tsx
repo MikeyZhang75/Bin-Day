@@ -1,3 +1,4 @@
+import React from "react";
 import { StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -16,66 +17,79 @@ interface WasteCardProps {
 	formattedDate: string;
 }
 
-export function WasteCard({ type, formattedDate }: WasteCardProps) {
-	const cardBgColor = useThemeColor(
-		{ light: "#FFFFFF", dark: "#1C1C1E" },
-		"text",
-	);
-	const borderColor = useThemeColor(
-		{ light: "#E5E5E7", dark: "#2C2C2E" },
-		"text",
-	);
+export const WasteCard = React.memo(
+	({ type, formattedDate }: WasteCardProps) => {
+		const cardBgColor = useThemeColor(
+			{ light: "#FFFFFF", dark: "#1C1C1E" },
+			"text",
+		);
+		const borderColor = useThemeColor(
+			{ light: "#E5E5E7", dark: "#2C2C2E" },
+			"text",
+		);
 
-	const isToday = formattedDate === "Today";
-	const isTomorrow = formattedDate === "Tomorrow";
+		const isToday = formattedDate === "Today";
+		const isTomorrow = formattedDate === "Tomorrow";
 
-	return (
-		<View
-			style={[
-				styles.wasteCard,
-				{
-					backgroundColor: isToday ? `${type.color}10` : cardBgColor,
-					borderColor: isToday || isTomorrow ? type.color : borderColor,
-					borderWidth: isToday ? 2 : 1,
-				},
-				isToday && styles.wasteCardToday,
-			]}
-		>
+		return (
 			<View
 				style={[
-					styles.wasteIconContainer,
+					styles.wasteCard,
 					{
-						backgroundColor: isToday ? type.color : type.bgColor,
+						backgroundColor: isToday ? `${type.color}10` : cardBgColor,
+						borderColor: isToday || isTomorrow ? type.color : borderColor,
+						borderWidth: isToday ? 2 : 1,
 					},
+					isToday && styles.wasteCardToday,
 				]}
+				accessible={true}
+				accessibilityLabel={`${type.name} collection: ${formattedDate}`}
+				accessibilityHint={
+					isToday
+						? "Collection is today"
+						: isTomorrow
+							? "Collection is tomorrow"
+							: ""
+				}
 			>
-				<IconSymbol
-					name={type.icon}
-					size={isToday ? 24 : 22}
-					color={isToday ? "#FFFFFF" : type.color}
-				/>
-			</View>
-			<View style={styles.wasteContent}>
-				<ThemedText
-					style={[styles.wasteType, isToday && { fontWeight: "700" }]}
+				<View
+					style={[
+						styles.wasteIconContainer,
+						{
+							backgroundColor: isToday ? type.color : type.bgColor,
+						},
+					]}
 				>
-					{type.name}
-				</ThemedText>
-				{isToday || isTomorrow ? (
-					<View style={styles.wasteDateRow}>
-						<View style={[styles.wasteBadge, { backgroundColor: type.color }]}>
-							<ThemedText style={styles.wasteBadgeText}>
-								{isToday ? "TODAY" : "TOMORROW"}
-							</ThemedText>
+					<IconSymbol
+						name={type.icon}
+						size={isToday ? 24 : 22}
+						color={isToday ? "#FFFFFF" : type.color}
+					/>
+				</View>
+				<View style={styles.wasteContent}>
+					<ThemedText
+						style={[styles.wasteType, isToday && { fontWeight: "700" }]}
+					>
+						{type.name}
+					</ThemedText>
+					{isToday || isTomorrow ? (
+						<View style={styles.wasteDateRow}>
+							<View
+								style={[styles.wasteBadge, { backgroundColor: type.color }]}
+							>
+								<ThemedText style={styles.wasteBadgeText}>
+									{isToday ? "TODAY" : "TOMORROW"}
+								</ThemedText>
+							</View>
 						</View>
-					</View>
-				) : (
-					<ThemedText style={styles.wasteDate}>{formattedDate}</ThemedText>
-				)}
+					) : (
+						<ThemedText style={styles.wasteDate}>{formattedDate}</ThemedText>
+					)}
+				</View>
 			</View>
-		</View>
-	);
-}
+		);
+	},
+);
 
 const styles = StyleSheet.create({
 	wasteCard: {
