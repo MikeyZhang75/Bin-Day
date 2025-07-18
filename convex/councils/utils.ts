@@ -9,6 +9,7 @@ import type { WasteCollectionDates } from "../councilServices";
 import {
 	AddressNotFoundError,
 	CouncilAPIError,
+	type CouncilName,
 	logError,
 	safeJsonParse,
 } from "./index";
@@ -199,7 +200,7 @@ export async function fetchWasteServices(
 
 export async function processCouncilData(
 	placeDetails: GooglePlaceDetails,
-	councilName: string,
+	councilName: CouncilName,
 	config: {
 		searchApiUrl: string;
 		wasteServicesUrl: string;
@@ -209,7 +210,7 @@ export async function processCouncilData(
 	// Extract address components using the utility function
 	const addressComponents = extractAddressComponents(placeDetails);
 	// Construct search query, only including subpremise if it exists
-	const searchQuery = getSearchAddress(addressComponents);
+	const searchQuery = getSearchAddress(addressComponents, councilName);
 
 	try {
 		// Search for the address

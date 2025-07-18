@@ -20,12 +20,17 @@ export const autocomplete = action({
 			throw new Error("Google Places API key not configured");
 		}
 
+		// Victoria bounds based on actual state boundaries:
+		// Southwest corner: -39.2° (Wilsons Promontory), 141.0° (SA border)
+		// Northeast corner: -34.0° (Murray River), 150.0° (Cape Howe region)
+		// Using locationrestriction to strictly limit results to Victoria
 		const params = new URLSearchParams({
 			input,
 			key: GOOGLE_PLACES_API_KEY,
 			sessiontoken: sessionToken,
 			components: "country:au",
 			types: "address",
+			locationrestriction: "rectangle:-39.2,141.0|-34.0,150.0",
 		});
 
 		const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params}`;

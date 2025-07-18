@@ -58,7 +58,14 @@ The app uses Expo Router's file-based routing:
    - Themed components in `components/` (ThemedText, ThemedView)
    - Color definitions in `constants/Colors.ts`
 
-2. **Component Organization**
+2. **Animation System**
+
+   - Unified animation system using React Native Reanimated 3
+   - Consistent bezier curves `(0.25, 0.1, 0.25, 1)` across all animations
+   - Standard duration of 350ms with smooth transitions
+   - See `docs/ANIMATION_SYSTEM.md` for detailed documentation
+
+3. **Component Organization**
 
    - UI components in `components/ui/` (platform-specific implementations)
    - Reusable components directly in `components/`:
@@ -66,18 +73,18 @@ The app uses Expo Router's file-based routing:
      - `UnsupportedCouncilCard.tsx` - Card component for displaying unsupported council information
    - Custom hooks in `hooks/`
 
-3. **Platform-Specific Code**
+4. **Platform-Specific Code**
 
    - `.ios.tsx` and `.tsx` file extensions for platform variants
    - Platform.select() for inline platform branching
 
-4. **TypeScript Configuration**
+5. **TypeScript Configuration**
 
    - Strict mode enabled
    - Path alias `@/*` maps to project root
    - Typed routes via Expo's experimental feature
 
-5. **Convex Backend**
+6. **Convex Backend**
    - Generated types in `convex/_generated/`
    - Backend functions in `convex/` directory:
      - `councilServices.ts` - Council data fetching logic with WasteCollectionDates type

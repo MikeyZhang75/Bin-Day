@@ -1,5 +1,5 @@
 // External package imports
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 // Internal absolute imports
 import { ThemedText } from "@/components/ThemedText";
@@ -7,18 +7,14 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 
 interface UnsupportedCouncilCardProps {
 	councilName: string;
-	onViewSupportedCouncils: () => void;
 	backgroundColor: string;
 	borderColor: string;
-	tintColor: string;
 }
 
 export function UnsupportedCouncilCard({
 	councilName,
-	onViewSupportedCouncils,
 	backgroundColor,
 	borderColor,
-	tintColor,
 }: UnsupportedCouncilCardProps) {
 	return (
 		<View style={[styles.councilCard, { backgroundColor, borderColor }]}>
@@ -38,23 +34,6 @@ export function UnsupportedCouncilCard({
 				<ThemedText style={styles.unsupportedText}>
 					This council is not currently supported by our service.
 				</ThemedText>
-				<Pressable
-					style={styles.infoButton}
-					onPress={onViewSupportedCouncils}
-					accessibilityRole="button"
-					accessibilityLabel="View list of supported councils"
-					accessibilityHint="Opens a modal showing all councils supported by this service"
-				>
-					<IconSymbol
-						name="info.circle"
-						size={20}
-						color={tintColor}
-						style={styles.infoIcon}
-					/>
-					<ThemedText style={[styles.infoButtonText, { color: tintColor }]}>
-						View supported councils
-					</ThemedText>
-				</Pressable>
 			</View>
 		</View>
 	);
@@ -94,18 +73,5 @@ const styles = StyleSheet.create({
 	unsupportedText: {
 		fontSize: 14,
 		opacity: 0.7,
-		marginBottom: 12,
-	},
-	infoButton: {
-		flexDirection: "row",
-		alignItems: "center",
-		paddingVertical: 8,
-	},
-	infoIcon: {
-		marginRight: 8,
-	},
-	infoButtonText: {
-		fontSize: 14,
-		fontWeight: "500",
 	},
 });
