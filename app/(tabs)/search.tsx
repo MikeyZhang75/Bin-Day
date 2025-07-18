@@ -27,6 +27,7 @@ import type { CouncilData } from "@/convex/councilServices";
 import type { CouncilName } from "@/convex/councils";
 import { isValidCouncilName } from "@/convex/councils";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { extractAddressComponents } from "@/lib/addressExtractor";
 import type {
 	GooglePlaceDetails,
 	GooglePrediction,
@@ -352,17 +353,33 @@ export default function SearchScreen() {
 									<IconSymbol name="xmark" size={20} color={`${textColor}60`} />
 								</Pressable>
 							</View>
-							<View style={styles.selectedContent}>
-								<IconSymbol
-									name="checkmark.circle.fill"
-									size={24}
-									color={tintColor}
-									style={styles.selectedIcon}
-								/>
+							{selectedPlaceDetails ? (
+								(() => {
+									const components =
+										extractAddressComponents(selectedPlaceDetails);
+									const streetAddress = components.subpremise
+										? `${components.subpremise}/${components.streetNumber} ${components.route}`
+										: `${components.streetNumber} ${components.route}`;
+									const line1 = streetAddress.trim() || components.route;
+									const line2 =
+										`${components.locality} ${components.administrativeAreaLevel1} ${components.postalCode}`.trim();
+
+									return (
+										<View>
+											<ThemedText style={styles.selectedAddressLine1}>
+												{line1}
+											</ThemedText>
+											<ThemedText style={styles.selectedAddressLine2}>
+												{line2}
+											</ThemedText>
+										</View>
+									);
+								})()
+							) : (
 								<ThemedText style={styles.selectedAddress}>
 									{selectedAddress}
 								</ThemedText>
-							</View>
+							)}
 						</View>
 
 						{/* Council/Municipality Card */}
@@ -666,19 +683,24 @@ const styles = StyleSheet.create({
 		textTransform: "uppercase",
 		letterSpacing: 0.5,
 	},
-	selectedContent: {
-		flexDirection: "row",
-		alignItems: "flex-start",
-	},
-	selectedIcon: {
-		marginRight: 12,
-		marginTop: 2,
-	},
 	selectedAddress: {
-		flex: 1,
 		fontSize: 18,
 		fontWeight: "500",
 		lineHeight: 24,
+		marginTop: 8,
+	},
+	selectedAddressLine1: {
+		fontSize: 20,
+		fontWeight: "600",
+		lineHeight: 26,
+		marginTop: 8,
+	},
+	selectedAddressLine2: {
+		fontSize: 16,
+		fontWeight: "400",
+		opacity: 0.8,
+		lineHeight: 22,
+		marginTop: 4,
 	},
 	councilCard: {
 		borderRadius: 12,

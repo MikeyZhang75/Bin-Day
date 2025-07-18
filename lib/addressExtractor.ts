@@ -29,11 +29,11 @@ export interface ExtractedAddressComponents {
 export function extractAddressComponents(
 	placeDetails: GooglePlaceDetails,
 ): ExtractedAddressComponents {
-	const findComponent = (types: string[]): string => {
+	const findComponent = (types: string[], shortName?: boolean): string => {
 		const component = placeDetails.address_components.find((component) =>
 			types.some((type) => component.types.includes(type)),
 		);
-		return component?.long_name || "";
+		return shortName ? component?.short_name || "" : component?.long_name || "";
 	};
 
 	return {
@@ -41,7 +41,10 @@ export function extractAddressComponents(
 		streetNumber: findComponent(["street_number"]),
 		route: findComponent(["route"]),
 		locality: findComponent(["locality"]),
-		administrativeAreaLevel1: findComponent(["administrative_area_level_1"]),
+		administrativeAreaLevel1: findComponent(
+			["administrative_area_level_1"],
+			true,
+		),
 		administrativeAreaLevel2: findComponent(["administrative_area_level_2"]),
 		country: findComponent(["country"]),
 		postalCode: findComponent(["postal_code"]),
