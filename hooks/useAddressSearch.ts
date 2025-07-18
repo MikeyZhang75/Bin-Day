@@ -8,12 +8,12 @@ import { extractAddressComponents } from "@/lib/addressExtractor";
 import { useAppStore } from "@/stores/appStore";
 import type { GooglePrediction } from "@/types/googlePlaces";
 
-export function useAddressSearchZustand() {
+export function useAddressSearch() {
 	// Convex actions
 	const autocomplete = useAction(api.googlePlaces.autocomplete);
 	const placeDetails = useAction(api.googlePlaces.placeDetails);
 
-	// Zustand store
+	// Store
 	const sessionToken = useAppStore((state) => state.search.sessionToken);
 	const setSearchQuery = useAppStore((state) => state.setSearchQuery);
 	const setSearchResults = useAppStore((state) => state.setSearchResults);
@@ -60,7 +60,7 @@ export function useAddressSearchZustand() {
 						"Unable to search addresses. Please check your connection and try again.",
 					);
 				}
-			}, 300);
+			}, 100);
 		},
 		[
 			sessionToken,

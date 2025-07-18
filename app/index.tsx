@@ -23,9 +23,9 @@ import { SearchResults } from "@/components/search/SearchResults";
 import { ThemedView } from "@/components/ThemedView";
 import { UnsupportedCouncilCard } from "@/components/UnsupportedCouncilCard";
 import { WasteCollectionGrid } from "@/components/waste/WasteCollectionGrid";
-import { useAddressSearchZustand } from "@/hooks/useAddressSearchZustand";
+import { useAddressSearch } from "@/hooks/useAddressSearch";
 import { useAnimations } from "@/hooks/useAnimations";
-import { useCouncilDataZustand } from "@/hooks/useCouncilDataZustand";
+import { useCouncilData } from "@/hooks/useCouncilData";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAppStore } from "@/stores/appStore";
 import type { GooglePrediction } from "@/types/googlePlaces";
@@ -38,7 +38,7 @@ export default function HomeScreen() {
 		useAppStore.getState().setSessionToken(uuidv4());
 	}, []);
 
-	// Zustand store selectors
+	// Store selectors
 	const searchQuery = useAppStore((state) => state.search.query);
 	const searchResults = useAppStore((state) => state.search.results);
 	const isSearching = useAppStore((state) => state.search.isSearching);
@@ -65,7 +65,7 @@ export default function HomeScreen() {
 	const colorScheme =
 		useThemeColor({}, "background") === "#000000" ? "dark" : "light";
 
-	// Custom hooks with Zustand
+	// Custom hooks
 	const {
 		searchForAddress,
 		selectAddress,
@@ -73,9 +73,9 @@ export default function HomeScreen() {
 		clearSelectedAddress,
 		setSearchFocused,
 		setShowResults,
-	} = useAddressSearchZustand();
+	} = useAddressSearch();
 
-	const { councilData, isLoadingCouncilData } = useCouncilDataZustand();
+	const { councilData, isLoadingCouncilData } = useCouncilData();
 
 	// Animations
 	const {

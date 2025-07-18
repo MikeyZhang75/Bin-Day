@@ -54,16 +54,16 @@ bin-day/
 │   ├── ANIMATION_SYSTEM.md  # Animation documentation
 │   └── PROJECT_INDEX.md     # This file
 ├── hooks/                   # Custom React hooks
-│   ├── useAddressSearchZustand.ts
+│   ├── useAddressSearch.ts
 │   ├── useAnimations.ts     # Unified animation system
-│   ├── useCouncilDataZustand.ts
+│   ├── useCouncilData.ts
 │   └── useThemeColor.ts
 ├── lib/                     # Utility functions
 │   ├── addressExtractor.ts  # Address parsing
 │   ├── distance.ts          # Distance calculations
 │   └── env.ts              # Environment validation
 ├── stores/                  # State management
-│   └── appStore.ts         # Zustand store
+│   └── appStore.ts         # Global state store
 ├── types/                   # TypeScript definitions
 │   ├── council.ts          # Council types
 │   └── googlePlaces.ts     # Google Places types
@@ -130,7 +130,7 @@ bin-day/
 
 ## State Management
 
-### Zustand Store Structure
+### Store Structure
 
 ```typescript
 AppStore {

@@ -4,10 +4,10 @@ import { api } from "@/convex/_generated/api";
 import type { CouncilName } from "@/convex/councils";
 import { useAppStore } from "@/stores/appStore";
 
-export function useCouncilDataZustand() {
+export function useCouncilData() {
 	const getCouncilData = useAction(api.councilServices.getCouncilData);
 
-	// Zustand store
+	// Store
 	const placeDetails = useAppStore((state) => state.address.placeDetails);
 	const council = useAppStore((state) => state.address.council);
 	const councilData = useAppStore((state) => state.councilData.data);
