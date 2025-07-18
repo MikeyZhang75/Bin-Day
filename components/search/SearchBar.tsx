@@ -1,6 +1,9 @@
 import type { RefObject } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+	interpolateColor,
+	useAnimatedStyle,
+} from "react-native-reanimated";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
@@ -32,7 +35,11 @@ export function SearchBar({
 
 	const animatedContainerStyle = useAnimatedStyle(() => {
 		const progress = inputFocusAnim?.value || 0;
-		const borderColor = progress > 0.5 ? tintColor : `${textColor}20`;
+		const borderColor = interpolateColor(
+			progress,
+			[0, 1],
+			[`${textColor}20`, tintColor],
+		);
 
 		return {
 			borderColor,

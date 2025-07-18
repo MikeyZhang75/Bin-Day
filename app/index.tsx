@@ -199,32 +199,34 @@ export default function HomeScreen() {
 						{/* Main Content */}
 						<View style={styles.mainContent}>
 							{/* Search Wrapper for proper z-index handling */}
-							<View style={styles.searchWrapper}>
-								<Pressable onPress={(e) => e.stopPropagation()}>
-									<View style={styles.searchSection}>
-										<SearchBar
-											inputRef={inputRef}
-											searchQuery={searchQuery}
-											onSearchQueryChange={handleSearchQueryChange}
-											onFocus={handleSearchFocus}
-											onBlur={handleSearchBlur}
-											onClear={handleSearchClear}
-											inputFocusAnim={inputFocusAnim}
-										/>
-
-										{/* Search Results Dropdown - Always render if results exist to allow exit animation */}
-										{searchResults.length > 0 && (
-											<SearchResults
-												searchResults={searchResults}
-												showResults={showResults}
-												onSelectAddress={handleAddressSelect}
-												resultsOpacityAnim={resultsOpacityAnim}
-												resultsScaleAnim={resultsScaleAnim}
+							{!selectedAddress && (
+								<View style={styles.searchWrapper}>
+									<Pressable onPress={(e) => e.stopPropagation()}>
+										<View style={styles.searchSection}>
+											<SearchBar
+												inputRef={inputRef}
+												searchQuery={searchQuery}
+												onSearchQueryChange={handleSearchQueryChange}
+												onFocus={handleSearchFocus}
+												onBlur={handleSearchBlur}
+												onClear={handleSearchClear}
+												inputFocusAnim={inputFocusAnim}
 											/>
-										)}
-									</View>
-								</Pressable>
-							</View>
+
+											{/* Search Results Dropdown - Always render if results exist to allow exit animation */}
+											{searchResults.length > 0 && (
+												<SearchResults
+													searchResults={searchResults}
+													showResults={showResults}
+													onSelectAddress={handleAddressSelect}
+													resultsOpacityAnim={resultsOpacityAnim}
+													resultsScaleAnim={resultsScaleAnim}
+												/>
+											)}
+										</View>
+									</Pressable>
+								</View>
+							)}
 
 							{/* Content Area */}
 							<View style={styles.contentContainer}>
