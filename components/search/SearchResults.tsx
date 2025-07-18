@@ -1,4 +1,5 @@
-import { Animated, FlatList, StyleSheet, View } from "react-native";
+import { FlatList, StyleSheet, View } from "react-native";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import type { GooglePrediction } from "@/types/googlePlaces";
 import { SearchResultItem } from "./SearchResultItem";
@@ -7,8 +8,8 @@ interface SearchResultsProps {
 	searchResults: GooglePrediction[];
 	showResults: boolean;
 	onSelectAddress: (prediction: GooglePrediction) => void;
-	resultsOpacityAnim: Animated.Value;
-	resultsScaleAnim: Animated.Value;
+	resultsOpacityAnim: Animated.SharedValue<number>;
+	resultsScaleAnim: Animated.SharedValue<number>;
 }
 
 export function SearchResults({
@@ -27,40 +28,52 @@ export function SearchResults({
 		"text",
 	);
 
+	const animatedStyle = useAnimatedStyle(() => {
+		return {
+			opacity: resultsOpacityAnim?.value || 0,
+			transform: [{ scale: resultsScaleAnim?.value || 0.95 }],
+		};
+	});
+
+	// Don't unmount immediately to allow exit animation
 	if (searchResults.length === 0) {
 		return null;
 	}
 
 	return (
-		<View style={styles.shadowWrapper} pointerEvents={showResults ? "auto" : "none"}>
+		<View
+			style={styles.shadowWrapper}
+			pointerEvents={showResults ? "auto" : "none"}
+		>
 			<Animated.View
 				style={[
 					styles.resultsContainer,
 					{
 						backgroundColor: cardBgColor,
 						borderColor,
-						opacity: resultsOpacityAnim,
-						transform: [{ scale: resultsScaleAnim }],
 					},
+					animatedStyle,
 				]}
 				onStartShouldSetResponder={() => true}
 				onResponderTerminationRequest={() => false}
 			>
 				<FlatList
-				data={searchResults.slice(0, 3)}
-				renderItem={({ item }) => (
-					<SearchResultItem
-						prediction={item}
-						onPress={() => onSelectAddress(item)}
-					/>
-				)}
-				keyExtractor={(item) => item.place_id}
-				keyboardShouldPersistTaps="always"
-				scrollEnabled={false}
-				ItemSeparatorComponent={() => (
-					<View style={[styles.separator, { backgroundColor: borderColor }]} />
-				)}
-			/>
+					data={searchResults.slice(0, 3)}
+					renderItem={({ item }) => (
+						<SearchResultItem
+							prediction={item}
+							onPress={() => onSelectAddress(item)}
+						/>
+					)}
+					keyExtractor={(item) => item.place_id}
+					keyboardShouldPersistTaps="always"
+					scrollEnabled={false}
+					ItemSeparatorComponent={() => (
+						<View
+							style={[styles.separator, { backgroundColor: borderColor }]}
+						/>
+					)}
+				/>
 			</Animated.View>
 		</View>
 	);

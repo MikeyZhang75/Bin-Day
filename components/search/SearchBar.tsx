@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
-import { Animated, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
@@ -10,7 +11,7 @@ interface SearchBarProps {
 	onBlur: () => void;
 	onClear: () => void;
 	inputRef: RefObject<TextInput | null>;
-	inputFocusAnim: Animated.Value;
+	inputFocusAnim: Animated.SharedValue<number>;
 }
 
 export function SearchBar({
@@ -29,9 +30,25 @@ export function SearchBar({
 		"text",
 	);
 
-	const animatedBorderColor = inputFocusAnim.interpolate({
-		inputRange: [0, 1],
-		outputRange: [`${textColor}20`, tintColor],
+	const animatedContainerStyle = useAnimatedStyle(() => {
+		const progress = inputFocusAnim?.value || 0;
+		const borderColor = progress > 0.5 ? tintColor : `${textColor}20`;
+
+		return {
+			borderColor,
+		};
+	});
+
+	const animatedInactiveIconStyle = useAnimatedStyle(() => {
+		return {
+			opacity: 1 - (inputFocusAnim?.value || 0),
+		};
+	});
+
+	const animatedActiveIconStyle = useAnimatedStyle(() => {
+		return {
+			opacity: inputFocusAnim?.value || 0,
+		};
 	});
 
 	return (
@@ -45,19 +62,18 @@ export function SearchBar({
 					styles.searchContainer,
 					{
 						backgroundColor: cardBgColor,
-						borderColor: animatedBorderColor,
 					},
+					animatedContainerStyle,
 				]}
 			>
 				<View style={styles.searchIcon}>
 					<Animated.View
-						style={{
-							position: "absolute",
-							opacity: inputFocusAnim.interpolate({
-								inputRange: [0, 1],
-								outputRange: [1, 0],
-							}),
-						}}
+						style={[
+							{
+								position: "absolute",
+							},
+							animatedInactiveIconStyle,
+						]}
 					>
 						<IconSymbol
 							name="magnifyingglass"
@@ -65,11 +81,7 @@ export function SearchBar({
 							color={`${textColor}60`}
 						/>
 					</Animated.View>
-					<Animated.View
-						style={{
-							opacity: inputFocusAnim,
-						}}
-					>
+					<Animated.View style={animatedActiveIconStyle}>
 						<IconSymbol name="magnifyingglass" size={20} color={tintColor} />
 					</Animated.View>
 				</View>

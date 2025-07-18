@@ -9,9 +9,9 @@ import type { WasteCollectionDates } from "../councilServices";
 import {
 	AddressNotFoundError,
 	CouncilAPIError,
+	type CouncilName,
 	logError,
 	safeJsonParse,
-	type CouncilName,
 } from "./index";
 
 // Default headers that are common across all councils

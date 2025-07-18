@@ -1,93 +1,92 @@
-import { useEffect, useRef } from "react";
-import { Animated, Easing } from "react-native";
+import { useState } from "react";
+import {
+	Easing,
+	runOnJS,
+	useSharedValue,
+	withTiming,
+} from "react-native-reanimated";
 
 export function useAnimations() {
-	// Animation values
-	const fadeAnim = useRef(new Animated.Value(0)).current;
-	const emptyStateFadeAnim = useRef(new Animated.Value(1)).current;
-	const resultsOpacityAnim = useRef(new Animated.Value(0)).current;
-	const resultsScaleAnim = useRef(new Animated.Value(0.95)).current;
-	const inputFocusAnim = useRef(new Animated.Value(0)).current;
+	// Reanimated shared values
+	const fadeAnim = useSharedValue(0);
+	const emptyStateFadeAnim = useSharedValue(1);
+	const resultsOpacityAnim = useSharedValue(0);
+	const resultsScaleAnim = useSharedValue(0.95);
+	const inputFocusAnim = useSharedValue(0);
+	const blurOpacityAnim = useSharedValue(0);
+
+	// State to track if blur should be rendered
+	const [shouldRenderBlur, setShouldRenderBlur] = useState(false);
 
 	// Start animations
 	const animateSearchFocus = (focused: boolean) => {
-		Animated.timing(inputFocusAnim, {
-			toValue: focused ? 1 : 0,
+		inputFocusAnim.value = withTiming(focused ? 1 : 0, {
 			duration: 200,
-			useNativeDriver: true,
-		}).start();
+			easing: Easing.out(Easing.cubic),
+		});
+	};
+
+	// Animate blur overlay with proper exit animation
+	const animateBlur = (show: boolean, hasDropdown = false) => {
+		if (show) {
+			setShouldRenderBlur(true);
+			blurOpacityAnim.value = withTiming(1, {
+				duration: 150,
+				easing: Easing.out(Easing.cubic),
+			});
+		} else {
+			// Sync with dropdown close animation if dropdown is visible
+			const duration = hasDropdown ? 150 : 120;
+			blurOpacityAnim.value = withTiming(
+				0,
+				{
+					duration,
+					easing: Easing.in(Easing.cubic),
+				},
+				(finished) => {
+					if (finished) {
+						runOnJS(setShouldRenderBlur)(false);
+					}
+				},
+			);
+		}
 	};
 
 	const animateResults = (show: boolean) => {
 		if (show) {
-			Animated.parallel([
-				Animated.timing(resultsOpacityAnim, {
-					toValue: 1,
-					duration: 200,
-					useNativeDriver: true,
-					easing: Easing.out(Easing.cubic),
-				}),
-				Animated.timing(resultsScaleAnim, {
-					toValue: 1,
-					duration: 200,
-					useNativeDriver: true,
-					easing: Easing.out(Easing.cubic),
-				}),
-			]).start();
+			resultsOpacityAnim.value = withTiming(1, {
+				duration: 200,
+				easing: Easing.out(Easing.cubic),
+			});
+			resultsScaleAnim.value = withTiming(1, {
+				duration: 200,
+				easing: Easing.out(Easing.cubic),
+			});
 		} else {
-			Animated.parallel([
-				Animated.timing(resultsOpacityAnim, {
-					toValue: 0,
-					duration: 150,
-					useNativeDriver: true,
-					easing: Easing.in(Easing.cubic),
-				}),
-				Animated.timing(resultsScaleAnim, {
-					toValue: 0.95,
-					duration: 150,
-					useNativeDriver: true,
-					easing: Easing.in(Easing.cubic),
-				}),
-			]).start();
+			resultsOpacityAnim.value = withTiming(0, {
+				duration: 150,
+				easing: Easing.in(Easing.cubic),
+			});
+			resultsScaleAnim.value = withTiming(0.95, {
+				duration: 150,
+				easing: Easing.in(Easing.cubic),
+			});
 		}
 	};
 
 	const animateEmptyState = (show: boolean) => {
-		Animated.timing(emptyStateFadeAnim, {
-			toValue: show ? 1 : 0.3,
+		emptyStateFadeAnim.value = withTiming(show ? 1 : 0.3, {
 			duration: 200,
-			useNativeDriver: true,
-		}).start();
+		});
 	};
 
 	const animateFadeIn = () => {
-		Animated.timing(fadeAnim, {
-			toValue: 1,
+		fadeAnim.value = withTiming(1, {
 			duration: 300,
-			useNativeDriver: true,
-		}).start();
+		});
 	};
 
-	// Cleanup animations on unmount
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Animation refs are stable
-	useEffect(() => {
-		return () => {
-			// Stop all animations
-			fadeAnim.stopAnimation();
-			emptyStateFadeAnim.stopAnimation();
-			resultsOpacityAnim.stopAnimation();
-			resultsScaleAnim.stopAnimation();
-			inputFocusAnim.stopAnimation();
-
-			// Remove all listeners
-			fadeAnim.removeAllListeners();
-			emptyStateFadeAnim.removeAllListeners();
-			resultsOpacityAnim.removeAllListeners();
-			resultsScaleAnim.removeAllListeners();
-			inputFocusAnim.removeAllListeners();
-		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	// Cleanup is handled automatically by Reanimated
 
 	return {
 		// Animation values
@@ -96,10 +95,13 @@ export function useAnimations() {
 		resultsOpacityAnim,
 		resultsScaleAnim,
 		inputFocusAnim,
+		blurOpacityAnim,
+		shouldRenderBlur,
 		// Animation functions
 		animateSearchFocus,
 		animateResults,
 		animateEmptyState,
 		animateFadeIn,
+		animateBlur,
 	};
 }
