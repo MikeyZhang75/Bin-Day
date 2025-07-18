@@ -19,7 +19,6 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { SearchBar } from "@/components/search/SearchBar";
 import { SearchResults } from "@/components/search/SearchResults";
 // Internal imports
-import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { UnsupportedCouncilCard } from "@/components/UnsupportedCouncilCard";
 import { WasteCollectionGrid } from "@/components/waste/WasteCollectionGrid";
@@ -186,16 +185,6 @@ export default function HomeScreen() {
 						onPress={handleOutsidePress}
 						accessible={false}
 					>
-						{/* Header */}
-						<View style={styles.header}>
-							<ThemedText type="title" style={styles.title}>
-								🗑️ Bin Day
-							</ThemedText>
-							<ThemedText type="default" style={styles.subtitle}>
-								Find your waste collection dates
-							</ThemedText>
-						</View>
-
 						{/* Main Content */}
 						<View style={styles.mainContent}>
 							{/* Search Wrapper for proper z-index handling */}
@@ -243,7 +232,7 @@ export default function HomeScreen() {
 									>
 										{Platform.OS === "ios" ? (
 											<BlurView
-												intensity={20}
+												intensity={12}
 												tint={colorScheme}
 												style={StyleSheet.absoluteFillObject}
 											/>
@@ -251,7 +240,7 @@ export default function HomeScreen() {
 											<View
 												style={[
 													StyleSheet.absoluteFillObject,
-													{ backgroundColor: "rgba(0,0,0,0.1)" },
+													{ backgroundColor: "rgba(0,0,0,0.06)" },
 												]}
 											/>
 										)}
@@ -316,24 +305,10 @@ const styles = StyleSheet.create({
 	contentWrapper: {
 		flex: 1,
 	},
-	header: {
-		alignItems: "center",
-		paddingTop: Platform.OS === "ios" ? 20 : 40,
-		paddingBottom: 20,
-		paddingHorizontal: 20,
-	},
-	title: {
-		fontSize: 36,
-		fontWeight: "bold",
-		marginBottom: 8,
-	},
-	subtitle: {
-		fontSize: 18,
-		opacity: 0.7,
-	},
 	mainContent: {
 		flex: 1,
 		paddingHorizontal: 20,
+		paddingTop: Platform.OS === "ios" ? 20 : 40,
 	},
 	searchWrapper: {
 		zIndex: 100,

@@ -21,8 +21,8 @@ export function useAnimations() {
 	// Start animations
 	const animateSearchFocus = (focused: boolean) => {
 		inputFocusAnim.value = withTiming(focused ? 1 : 0, {
-			duration: 200,
-			easing: Easing.out(Easing.cubic),
+			duration: 350,
+			easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 		});
 	};
 
@@ -31,17 +31,17 @@ export function useAnimations() {
 		if (show) {
 			setShouldRenderBlur(true);
 			blurOpacityAnim.value = withTiming(1, {
-				duration: 150,
-				easing: Easing.out(Easing.cubic),
+				duration: 300,
+				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 			});
 		} else {
 			// Sync with dropdown close animation if dropdown is visible
-			const duration = hasDropdown ? 150 : 120;
+			const duration = hasDropdown ? 300 : 250;
 			blurOpacityAnim.value = withTiming(
 				0,
 				{
 					duration,
-					easing: Easing.in(Easing.cubic),
+					easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 				},
 				(finished) => {
 					if (finished) {
@@ -55,34 +55,36 @@ export function useAnimations() {
 	const animateResults = (show: boolean) => {
 		if (show) {
 			resultsOpacityAnim.value = withTiming(1, {
-				duration: 200,
-				easing: Easing.out(Easing.cubic),
+				duration: 300,
+				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 			});
 			resultsScaleAnim.value = withTiming(1, {
-				duration: 200,
-				easing: Easing.out(Easing.cubic),
+				duration: 300,
+				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 			});
 		} else {
 			resultsOpacityAnim.value = withTiming(0, {
-				duration: 150,
-				easing: Easing.in(Easing.cubic),
+				duration: 250,
+				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 			});
 			resultsScaleAnim.value = withTiming(0.95, {
-				duration: 150,
-				easing: Easing.in(Easing.cubic),
+				duration: 250,
+				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 			});
 		}
 	};
 
 	const animateEmptyState = (show: boolean) => {
 		emptyStateFadeAnim.value = withTiming(show ? 1 : 0.3, {
-			duration: 200,
+			duration: 350,
+			easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 		});
 	};
 
 	const animateFadeIn = () => {
 		fadeAnim.value = withTiming(1, {
-			duration: 300,
+			duration: 350,
+			easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 		});
 	};
 
