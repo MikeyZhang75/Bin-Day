@@ -9,7 +9,7 @@ on:
     #   - "src/**/*.tsx"
     #   - "src/**/*.js"
     #   - "src/**/*.jsx"
-    
+
     # Note: Branch exclusions are handled in the job 'if' condition below
     # To exclude more branches, add them to the job condition
 
@@ -61,12 +61,44 @@ jobs:
           else
             echo "typecheck_passed=false" >> $GITHUB_OUTPUT
             echo "❌ Type check failed"
+            exit 1
           fi
-        continue-on-error: true
+
+      - name: Run lint check
+        id: lint
+        run: |
+          echo "Running lint check..."
+          if bun run lint; then
+            echo "lint_passed=true" >> $GITHUB_OUTPUT
+            echo "✅ Lint check passed"
+          else
+            echo "lint_passed=false" >> $GITHUB_OUTPUT
+            echo "❌ Lint check failed"
+            exit 1
+          fi
+
+      - name: Run Biome format check
+        id: biome
+        run: |
+          echo "Running Biome format check..."
+          if bunx @biomejs/biome check .; then
+            echo "biome_passed=true" >> $GITHUB_OUTPUT
+            echo "✅ Biome format check passed"
+          else
+            echo "biome_passed=false" >> $GITHUB_OUTPUT
+            echo "❌ Biome format check failed"
+            echo "Run 'bun run check:fix' to fix formatting issues"
+            exit 1
+          fi
 
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@beta
+        # Only run if all checks pass
+        if: |
+          steps.typecheck.outputs.typecheck_passed == 'true' &&
+          steps.lint.outputs.lint_passed == 'true' &&
+          steps.biome.outputs.biome_passed == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
@@ -75,15 +107,18 @@ jobs:
 
           # Direct prompt for automated review (no @claude mention needed)
           direct_prompt: |
-            Type check status: ${{ steps.typecheck.outputs.typecheck_passed == 'true' && '✅ Passed' || '❌ Failed' }}
-            
+            All automated checks have passed:
+            - ✅ Type check passed
+            - ✅ Lint check passed
+            - ✅ Biome format check passed
+
             Please review this pull request and provide feedback on:
             - Code quality and best practices
             - Potential bugs or issues
             - Performance considerations
             - Security concerns
             - Test coverage
-            - TypeScript type safety (if type check failed, please run `bun run check-types` to see the errors)
+            - Architecture and design patterns
 
             Be constructive and helpful in your feedback.
 
@@ -111,3 +146,32 @@ jobs:
           # if: |
           #   !contains(github.event.pull_request.title, '[skip-review]') &&
           #   !contains(github.event.pull_request.title, '[WIP]')
+
+      - name: Add job summary
+        if: failure()
+        run: |
+          echo "## ❌ Automated Checks Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The following checks need to pass before Claude can review your PR:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ steps.typecheck.outputs.typecheck_passed }}" == "false" ]]; then
+            echo "- ❌ **Type Check Failed** - Run \`bun run check-types\` to see errors" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ✅ Type Check Passed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ steps.lint.outputs.lint_passed }}" == "false" ]]; then
+            echo "- ❌ **Lint Check Failed** - Run \`bun run lint\` to see errors" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ✅ Lint Check Passed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ steps.biome.outputs.biome_passed }}" == "false" ]]; then
+            echo "- ❌ **Biome Format Check Failed** - Run \`bun run check:fix\` to auto-fix" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ✅ Biome Format Check Passed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please fix these issues and push your changes to trigger a new review." >> $GITHUB_STEP_SUMMARY
