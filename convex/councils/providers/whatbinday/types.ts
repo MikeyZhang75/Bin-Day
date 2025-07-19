@@ -25,11 +25,3 @@ export interface ParsedBinEvent {
 	date: DateTime;
 	binTypes: string[];
 }
-
-export interface WhatBinDayConfig {
-	apiKey: string;
-	agendaResultLimit?: string;
-	dateFormat?: string;
-	displayFormat?: "calendar" | "agenda";
-	calendarFutureMonths?: string;
-}

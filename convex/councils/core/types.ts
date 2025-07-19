@@ -34,6 +34,8 @@ export const COUNCIL_NAMES = {
 	YARRA_RANGES: "Yarra Ranges Shire",
 	MARIBYRNONG_CITY: "Maribyrnong City",
 	COLAC_OTWAY: "Colac Otway Shire",
+	QUEENSCLIFFE: "Queenscliffe Borough",
+	STRATHBOGIE_SHIRE: "Strathbogie Shire",
 } as const;
 
 export type CouncilName = (typeof COUNCIL_NAMES)[keyof typeof COUNCIL_NAMES];

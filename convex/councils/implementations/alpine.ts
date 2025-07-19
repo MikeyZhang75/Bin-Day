@@ -11,7 +11,7 @@ import {
 } from "../core";
 import { getSearchAddress } from "../core/addressFormatter";
 
-type AlpineShireApiResponse = {
+type AlpineApiResponse = {
 	command: string;
 	data?: string;
 	settings?: unknown;
@@ -19,7 +19,7 @@ type AlpineShireApiResponse = {
 	selector?: string;
 }[];
 
-function parseAlpineShireDate(dateText: string): number | null {
+function parseAlpineDate(dateText: string): number | null {
 	// Extract date from text like "Your next waste collection is in 12 days on Tuesday 29th July 2025."
 	const dateMatch = dateText.match(
 		/on\s+\w+\s+(\d{1,2})\w{0,2}\s+(\w+)\s+(\d{4})/,
@@ -41,7 +41,7 @@ function parseAlpineShireDate(dateText: string): number | null {
 	return Math.floor(parsedDate.toSeconds());
 }
 
-function parseAlpineShireWasteData(html: string): WasteCollectionDates {
+function parseAlpineWasteData(html: string): WasteCollectionDates {
 	const dates: WasteCollectionDates = {
 		landfillWaste: null,
 		recycling: null,
@@ -55,7 +55,7 @@ function parseAlpineShireWasteData(html: string): WasteCollectionDates {
 		/views-field-waste-day[\s\S]*?<p class="field-content">([\s\S]*?)<\/p>/,
 	);
 	if (wasteMatch) {
-		dates.landfillWaste = parseAlpineShireDate(wasteMatch[1]);
+		dates.landfillWaste = parseAlpineDate(wasteMatch[1]);
 	}
 
 	// Parse Recycling date
@@ -63,7 +63,7 @@ function parseAlpineShireWasteData(html: string): WasteCollectionDates {
 		/views-field-recycling-day[\s\S]*?<p class="field-content">([\s\S]*?)<\/p>/,
 	);
 	if (recyclingMatch) {
-		dates.recycling = parseAlpineShireDate(recyclingMatch[1]);
+		dates.recycling = parseAlpineDate(recyclingMatch[1]);
 	}
 
 	// Parse FOGO (Food Organics Garden Organics) date
@@ -71,7 +71,7 @@ function parseAlpineShireWasteData(html: string): WasteCollectionDates {
 		/views-field-fogo-day[\s\S]*?<p class="field-content">([\s\S]*?)<\/p>/,
 	);
 	if (fogoMatch) {
-		dates.foodAndGardenWaste = parseAlpineShireDate(fogoMatch[1]);
+		dates.foodAndGardenWaste = parseAlpineDate(fogoMatch[1]);
 	}
 
 	// Alpine Shire doesn't seem to have hard waste in the regular schedule
@@ -80,13 +80,13 @@ function parseAlpineShireWasteData(html: string): WasteCollectionDates {
 	return dates;
 }
 
-export async function fetchAlpineShireData(
+export async function fetchAlpineData(
 	placeDetails: GooglePlaceDetails,
 ): Promise<WasteCollectionDates> {
 	// Extract address components using the utility function
 	const addressComponents = extractAddressComponents(placeDetails);
 
-	// Construct the address string for Alpine Shire API
+	// Construct the address string for Alpine API
 	// Format: "1/27 Toorak Road Bright" (subpremise/streetNumber route locality)
 	const addressString = getSearchAddress(addressComponents);
 
@@ -121,7 +121,7 @@ export async function fetchAlpineShireData(
 			throw new CouncilAPIError(COUNCIL_NAMES.ALPINE_SHIRE, response.status);
 		}
 
-		const data = await safeJsonParse<AlpineShireApiResponse>(response);
+		const data = await safeJsonParse<AlpineApiResponse>(response);
 
 		// Find the insert command that contains the HTML with collection dates
 		const insertCommand = data.find(
@@ -136,7 +136,7 @@ export async function fetchAlpineShireData(
 		}
 
 		// Parse the HTML content to extract dates
-		const wasteCollectionDates = parseAlpineShireWasteData(insertCommand.data);
+		const wasteCollectionDates = parseAlpineWasteData(insertCommand.data);
 		return wasteCollectionDates;
 	} catch (error) {
 		logError(COUNCIL_NAMES.ALPINE_SHIRE, error);
