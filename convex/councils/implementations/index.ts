@@ -5,10 +5,10 @@ import type { WasteCollectionDates } from "../../councilServices";
 import { COUNCIL_NAMES, type CouncilName } from "../core";
 
 // Import all council implementations
-import { fetchAlpineShireData } from "./alpineShire";
+import { fetchAlpineData } from "./alpine";
 import { fetchBallaratData } from "./ballarat";
 import { fetchBanyuleData } from "./banyule";
-import { fetchBawBawShireData } from "./bawBawShire";
+import { fetchBawBawData } from "./bawBaw";
 import { fetchBaysideData } from "./bayside";
 import { fetchCampaspeData } from "./campaspe";
 import { fetchColacOtwayData } from "./colacOtway";
@@ -30,9 +30,11 @@ import { fetchMountAlexanderData } from "./mountAlexander";
 import { fetchMoyneData } from "./moyne";
 import { fetchNillumbikData } from "./nillumbik";
 import { fetchPyreneesData } from "./pyrenees";
+import { fetchQueenscliffeData } from "./queenscliffe";
 import { fetchSheppartonData } from "./shepparton";
 // import { fetchSouthernGrampiansData } from "./southernGrampians";
 import { fetchStonningtonData } from "./stonnington";
+import { fetchStrathbogieData } from "./strathbogie";
 import { fetchSurfCoastData } from "./surfCoast";
 import { fetchSwanHillData } from "./swanHill";
 import { fetchWangarattaData } from "./wangaratta";
@@ -44,10 +46,10 @@ export const councilHandlers: Record<
 	CouncilName,
 	(placeDetails: GooglePlaceDetails) => Promise<WasteCollectionDates>
 > = {
-	[COUNCIL_NAMES.ALPINE_SHIRE]: fetchAlpineShireData,
+	[COUNCIL_NAMES.ALPINE_SHIRE]: fetchAlpineData,
 	[COUNCIL_NAMES.CITY_OF_BALLARAT]: fetchBallaratData,
 	[COUNCIL_NAMES.BANYULE_CITY]: fetchBanyuleData,
-	[COUNCIL_NAMES.BAW_BAW_SHIRE]: fetchBawBawShireData,
+	[COUNCIL_NAMES.BAW_BAW_SHIRE]: fetchBawBawData,
 	[COUNCIL_NAMES.BAYSIDE_CITY]: fetchBaysideData,
 	[COUNCIL_NAMES.CAMPASPE_SHIRE]: fetchCampaspeData,
 	[COUNCIL_NAMES.COLAC_OTWAY]: fetchColacOtwayData,
@@ -77,6 +79,8 @@ export const councilHandlers: Record<
 	[COUNCIL_NAMES.WANGARATTA_CITY]: fetchWangarattaData,
 	[COUNCIL_NAMES.WHITTLESEA_CITY]: fetchWhittleseaData,
 	[COUNCIL_NAMES.YARRA_RANGES]: fetchYarraRangesData,
+	[COUNCIL_NAMES.QUEENSCLIFFE]: fetchQueenscliffeData,
+	[COUNCIL_NAMES.STRATHBOGIE_SHIRE]: fetchStrathbogieData,
 };
 
 // Helper to get all supported council names (for schema generation)
@@ -86,10 +90,10 @@ export const getSupportedCouncilNames = (): CouncilName[] => {
 
 // Re-export all council data fetchers for backwards compatibility if needed
 export {
-	fetchAlpineShireData,
+	fetchAlpineData,
 	fetchBallaratData,
 	fetchBanyuleData,
-	fetchBawBawShireData,
+	fetchBawBawData,
 	fetchBaysideData,
 	fetchCampaspeData,
 	fetchColacOtwayData,
@@ -119,4 +123,6 @@ export {
 	fetchWangarattaData,
 	fetchWhittleseaData,
 	fetchYarraRangesData,
+	fetchQueenscliffeData,
+	fetchStrathbogieData,
 };

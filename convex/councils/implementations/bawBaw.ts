@@ -447,7 +447,7 @@ function parseWasteInfoResponse(data: WasteInfoResponse): WasteCollectionDates {
 	return dates;
 }
 
-export async function fetchBawBawShireData(placeDetails: GooglePlaceDetails) {
+export async function fetchBawBawData(placeDetails: GooglePlaceDetails) {
 	const addressComponents = extractAddressComponents(placeDetails);
 	const searchQuery = getSearchAddress(
 		addressComponents,
