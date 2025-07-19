@@ -13,12 +13,10 @@ export function useAddressSearch() {
 	const autocomplete = useAction(api.googlePlaces.autocomplete);
 	const placeDetails = useAction(api.googlePlaces.placeDetails);
 
-	// Store
+	// Store selectors and actions
 	const sessionToken = useAppStore((state) => state.search.sessionToken);
 	const setSearchQuery = useAppStore((state) => state.setSearchQuery);
 	const setSearchResults = useAppStore((state) => state.setSearchResults);
-	const setShowResults = useAppStore((state) => state.setShowResults);
-	const setSearching = useAppStore((state) => state.setSearching);
 	const setSessionToken = useAppStore((state) => state.setSessionToken);
 	const selectAddressAction = useAppStore((state) => state.selectAddress);
 	const clearSearchAction = useAppStore((state) => state.clearSearch);
@@ -73,10 +71,8 @@ export function useAddressSearch() {
 
 	const selectAddress = useCallback(
 		async (prediction: GooglePrediction) => {
-			// Immediately hide dropdown and keyboard
-			setShowResults(false);
-			setSearching(false);
-			setSearchResults([]); // Clear results to prevent race condition
+			// Clear results immediately to prevent race conditions
+			setSearchResults([]);
 			Keyboard.dismiss();
 
 			try {
@@ -138,8 +134,6 @@ export function useAddressSearch() {
 		[
 			sessionToken,
 			placeDetails,
-			setShowResults,
-			setSearching,
 			setSearchResults,
 			selectAddressAction,
 			setSessionToken,
@@ -147,13 +141,10 @@ export function useAddressSearch() {
 	);
 
 	return {
-		// Functions
 		searchForAddress,
 		selectAddress,
 		clearSearch: clearSearchAction,
 		clearSelectedAddress: clearAddressAction,
 		setSearchFocused,
-		setSearching,
-		setShowResults,
 	};
 }

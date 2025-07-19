@@ -1,5 +1,13 @@
+import * as Haptics from "expo-haptics";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
+import Animated, {
+	Easing,
+	FadeInDown,
+	useAnimatedStyle,
+	useSharedValue,
+	withSpring,
+} from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -15,13 +23,45 @@ export interface WasteType {
 interface WasteCardProps {
 	type: WasteType;
 	formattedDate: string;
+	priority?: "today" | "upcoming" | "future";
+	animationDelay?: number;
+	onPress?: () => void;
 }
 
+// Spacing system constants
+const SPACING = {
+	xs: 4,
+	sm: 8,
+	md: 16,
+	lg: 24,
+	xl: 32,
+} as const;
+
+// Animation constants
+const ANIMATION_CONFIG = {
+	duration: 350,
+	easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+	spring: {
+		damping: 18,
+		stiffness: 200,
+	},
+} as const;
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export const WasteCard = React.memo(
-	({ type, formattedDate }: WasteCardProps) => {
+	({
+		type,
+		formattedDate,
+		priority = "upcoming",
+		animationDelay = 0,
+		onPress,
+	}: WasteCardProps) => {
+		// Theme colors
+		const textColor = useThemeColor({}, "text");
 		const cardBgColor = useThemeColor(
 			{ light: "#FFFFFF", dark: "#1C1C1E" },
-			"text",
+			"background",
 		);
 		const borderColor = useThemeColor(
 			{ light: "#E5E5E7", dark: "#2C2C2E" },
@@ -31,62 +71,172 @@ export const WasteCard = React.memo(
 		const isToday = formattedDate === "Today";
 		const isTomorrow = formattedDate === "Tomorrow";
 
-		return (
-			<View
-				style={[
-					styles.wasteCard,
-					{
-						backgroundColor: isToday ? `${type.color}10` : cardBgColor,
-						borderColor: isToday || isTomorrow ? type.color : borderColor,
-						borderWidth: isToday ? 2 : 1,
-					},
-					isToday && styles.wasteCardToday,
-				]}
-				accessible={true}
-				accessibilityLabel={`${type.name} collection: ${formattedDate}`}
-				accessibilityHint={
-					isToday
-						? "Collection is today"
-						: isTomorrow
-							? "Collection is tomorrow"
-							: ""
-				}
-			>
-				<View
-					style={[
-						styles.wasteIconContainer,
-						{
-							backgroundColor: isToday ? type.color : type.bgColor,
+		// Get priority-based initial scale
+		const initialScale =
+			priority === "today" ? 1.05 : priority === "future" ? 0.95 : 1;
+
+		// Animation values
+		const scaleAnim = useSharedValue(1);
+		const opacityAnim = useSharedValue(priority === "future" ? 0.85 : 1);
+
+		// Animation styles - keep transform animations separate from layout animations
+		const animatedStyle = useAnimatedStyle(() => ({
+			transform: [{ scale: scaleAnim.value }],
+			opacity: opacityAnim.value,
+		}));
+
+		// Initial scale style - separate from interactive animations
+		const initialScaleStyle = useAnimatedStyle(() => ({
+			transform: [{ scale: initialScale }],
+		}));
+
+		// Handle press interactions
+		const handlePressIn = () => {
+			scaleAnim.value = withSpring(0.95, {
+				damping: 15,
+				stiffness: 400,
+			});
+			if (Platform.OS === "ios") {
+				Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+			}
+		};
+
+		const handlePressOut = () => {
+			scaleAnim.value = withSpring(1, {
+				damping: 15,
+				stiffness: 400,
+			});
+		};
+
+		const getShadowStyle = () => {
+			switch (priority) {
+				case "today":
+					return Platform.select({
+						ios: {
+							shadowColor: type.color,
+							shadowOffset: { width: 0, height: 4 },
+							shadowOpacity: 0.2,
+							shadowRadius: 12,
 						},
+						android: { elevation: 8 },
+					});
+				case "upcoming":
+					return Platform.select({
+						ios: {
+							shadowColor: "#000",
+							shadowOffset: { width: 0, height: 2 },
+							shadowOpacity: 0.08,
+							shadowRadius: 8,
+						},
+						android: { elevation: 4 },
+					});
+				default:
+					return Platform.select({
+						ios: {
+							shadowColor: "#000",
+							shadowOffset: { width: 0, height: 1 },
+							shadowOpacity: 0.05,
+							shadowRadius: 4,
+						},
+						android: { elevation: 2 },
+					});
+			}
+		};
+
+		return (
+			<Animated.View
+				entering={FadeInDown.duration(ANIMATION_CONFIG.duration)
+					.delay(animationDelay)
+					.easing(ANIMATION_CONFIG.easing)
+					.springify()
+					.damping(ANIMATION_CONFIG.spring.damping)
+					.stiffness(ANIMATION_CONFIG.spring.stiffness)}
+				style={styles.wasteCardWrapper}
+			>
+				<AnimatedPressable
+					style={[
+						styles.wasteCard,
+						{
+							backgroundColor: isToday ? `${type.color}12` : cardBgColor,
+							borderColor: isToday || isTomorrow ? type.color : borderColor,
+							borderWidth: isToday ? 2 : 1,
+						},
+						getShadowStyle(),
+						initialScaleStyle,
+						animatedStyle,
 					]}
+					onPress={onPress}
+					onPressIn={handlePressIn}
+					onPressOut={handlePressOut}
+					disabled={!onPress}
+					accessible={true}
+					accessibilityRole="button"
+					accessibilityLabel={`${type.name} collection: ${formattedDate}`}
+					accessibilityHint={
+						isToday
+							? "Collection is today. Double tap for details."
+							: isTomorrow
+								? "Collection is tomorrow. Double tap for details."
+								: `Collection on ${formattedDate}. Double tap for details.`
+					}
 				>
-					<IconSymbol
-						name={type.icon}
-						size={isToday ? 24 : 22}
-						color={isToday ? "#FFFFFF" : type.color}
-					/>
-				</View>
-				<View style={styles.wasteContent}>
-					<ThemedText
-						style={[styles.wasteType, isToday && { fontWeight: "700" }]}
+					<Animated.View
+						style={[
+							styles.wasteIconContainer,
+							{
+								backgroundColor: isToday ? type.color : type.bgColor,
+							},
+							priority === "today" && styles.todayIconContainer,
+						]}
 					>
-						{type.name}
-					</ThemedText>
-					{isToday || isTomorrow ? (
-						<View style={styles.wasteDateRow}>
-							<View
-								style={[styles.wasteBadge, { backgroundColor: type.color }]}
+						<IconSymbol
+							name={type.icon}
+							size={priority === "today" ? 20 : 18}
+							color={isToday ? "#FFFFFF" : type.color}
+						/>
+					</Animated.View>
+					<View style={styles.wasteContent}>
+						<ThemedText
+							style={[
+								styles.wasteType,
+								priority === "today" && styles.wasteTodayType,
+								priority === "future" && styles.wasteFutureType,
+								{ color: textColor },
+							]}
+							numberOfLines={1}
+							adjustsFontSizeToFit
+							minimumFontScale={0.8}
+						>
+							{type.name}
+						</ThemedText>
+						{isToday || isTomorrow ? (
+							<Animated.View style={styles.wasteDateRow}>
+								<Animated.View
+									style={[
+										styles.wasteBadge,
+										{ backgroundColor: type.color },
+										priority === "today" && styles.wasteTodayBadge,
+									]}
+								>
+									<ThemedText style={styles.wasteBadgeText}>
+										{isToday ? "TODAY" : "TOMORROW"}
+									</ThemedText>
+								</Animated.View>
+							</Animated.View>
+						) : (
+							<ThemedText
+								style={[
+									styles.wasteDate,
+									priority === "future" && styles.wasteFutureDate,
+									{ color: textColor },
+								]}
 							>
-								<ThemedText style={styles.wasteBadgeText}>
-									{isToday ? "TODAY" : "TOMORROW"}
-								</ThemedText>
-							</View>
-						</View>
-					) : (
-						<ThemedText style={styles.wasteDate}>{formattedDate}</ThemedText>
-					)}
-				</View>
-			</View>
+								{formattedDate}
+							</ThemedText>
+						)}
+					</View>
+				</AnimatedPressable>
+			</Animated.View>
 		);
 	},
 );
@@ -94,57 +244,79 @@ export const WasteCard = React.memo(
 WasteCard.displayName = "WasteCard";
 
 const styles = StyleSheet.create({
+	wasteCardWrapper: {
+		width: "50%",
+		paddingHorizontal: 6,
+		paddingBottom: 12,
+	},
 	wasteCard: {
 		flexDirection: "row",
 		alignItems: "center",
-		padding: 14,
-		borderRadius: 16,
+		padding: SPACING.md,
+		borderRadius: 18,
 		marginBottom: 0,
-		flex: 1,
-		minWidth: "47%",
-	},
-	wasteCardToday: {
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.15,
-		shadowRadius: 8,
-		elevation: 5,
+		width: "100%",
+		minHeight: 72, // Ensure consistent height for all cards
 	},
 	wasteIconContainer: {
-		width: 44,
-		height: 44,
-		borderRadius: 22,
+		width: 38,
+		height: 38,
+		borderRadius: 19,
 		justifyContent: "center",
 		alignItems: "center",
-		marginRight: 12,
+		marginRight: SPACING.sm + SPACING.xs,
+		flexShrink: 0, // Prevent icon from shrinking
+	},
+	todayIconContainer: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
 	},
 	wasteContent: {
 		flex: 1,
+		gap: SPACING.xs,
+		justifyContent: "center", // Center content vertically
 	},
 	wasteType: {
-		fontSize: 16,
+		fontSize: 15,
 		fontWeight: "600",
-		marginBottom: 2,
+		letterSpacing: -0.2,
+		lineHeight: 20,
+	},
+	wasteTodayType: {
+		fontSize: 16,
+		fontWeight: "700",
+		letterSpacing: -0.3,
+	},
+	wasteFutureType: {
+		fontSize: 15,
+		fontWeight: "500",
 	},
 	wasteDate: {
-		fontSize: 14,
+		fontSize: 13,
+		fontWeight: "500",
 		opacity: 0.6,
+		lineHeight: 18,
+	},
+	wasteFutureDate: {
+		fontSize: 13,
+		opacity: 0.5,
 	},
 	wasteDateRow: {
 		flexDirection: "row",
 		alignItems: "center",
-		marginTop: 2,
 	},
 	wasteBadge: {
-		paddingHorizontal: 8,
-		paddingVertical: 4,
+		paddingHorizontal: SPACING.sm,
+		paddingVertical: SPACING.xs,
 		borderRadius: 8,
 	},
+	wasteTodayBadge: {
+		paddingHorizontal: 10,
+		paddingVertical: 5,
+	},
 	wasteBadgeText: {
-		fontSize: 10,
+		fontSize: 11,
 		fontWeight: "700",
 		color: "#FFFFFF",
 		letterSpacing: 0.5,

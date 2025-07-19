@@ -9,9 +9,7 @@ import type {
 interface SearchState {
 	query: string;
 	results: GooglePrediction[];
-	isSearching: boolean;
 	isFocused: boolean;
-	showResults: boolean;
 	sessionToken: string;
 	error: string | null;
 }
@@ -40,8 +38,6 @@ interface AppActions {
 	setSearchQuery: (query: string) => void;
 	setSearchResults: (results: GooglePrediction[]) => void;
 	setSearchFocused: (focused: boolean) => void;
-	setSearching: (searching: boolean) => void;
-	setShowResults: (show: boolean) => void;
 	setSessionToken: (token: string) => void;
 	setSearchError: (error: string | null) => void;
 	clearSearch: () => void;
@@ -71,9 +67,7 @@ export const useAppStore = create<AppStore>()(
 			search: {
 				query: "",
 				results: [],
-				isSearching: false,
 				isFocused: false,
-				showResults: false,
 				sessionToken: "",
 				error: null,
 			},
@@ -100,23 +94,12 @@ export const useAppStore = create<AppStore>()(
 					search: {
 						...state.search,
 						results,
-						showResults: results.length > 0 && !state.address.selected,
 					},
 				})),
 
 			setSearchFocused: (isFocused) =>
 				set((state) => ({
 					search: { ...state.search, isFocused },
-				})),
-
-			setSearching: (isSearching) =>
-				set((state) => ({
-					search: { ...state.search, isSearching },
-				})),
-
-			setShowResults: (showResults) =>
-				set((state) => ({
-					search: { ...state.search, showResults },
 				})),
 
 			setSessionToken: (sessionToken) =>
@@ -135,7 +118,6 @@ export const useAppStore = create<AppStore>()(
 						...state.search,
 						query: "",
 						results: [],
-						showResults: false,
 						error: null,
 					},
 				})),
@@ -153,8 +135,6 @@ export const useAppStore = create<AppStore>()(
 						...state.search,
 						query: "",
 						results: [],
-						showResults: false,
-						isSearching: false,
 						isFocused: false,
 					},
 				})),
@@ -217,13 +197,35 @@ export const useAppStore = create<AppStore>()(
 	),
 );
 
-// Selectors for common use cases
-export const useSearchQuery = () => useAppStore((state) => state.search.query);
-export const useSearchResults = () =>
-	useAppStore((state) => state.search.results);
-export const useSelectedAddress = () =>
-	useAppStore((state) => state.address.selected);
-export const useCouncilData = () =>
-	useAppStore((state) => state.councilData.data);
+// Performance-optimized selectors
+export const searchSelectors = {
+	query: (state: AppStore) => state.search.query,
+	results: (state: AppStore) => state.search.results,
+	isFocused: (state: AppStore) => state.search.isFocused,
+	error: (state: AppStore) => state.search.error,
+	sessionToken: (state: AppStore) => state.search.sessionToken,
+	// Computed selector for dropdown visibility
+	isDropdownVisible: (state: AppStore) =>
+		state.search.isFocused && state.search.results.length > 0,
+};
+
+export const addressSelectors = {
+	selected: (state: AppStore) => state.address.selected,
+	placeDetails: (state: AppStore) => state.address.placeDetails,
+	council: (state: AppStore) => state.address.council,
+	unsupportedCouncil: (state: AppStore) => state.address.unsupportedCouncil,
+};
+
+export const councilDataSelectors = {
+	data: (state: AppStore) => state.councilData.data,
+	isLoading: (state: AppStore) => state.councilData.isLoading,
+	error: (state: AppStore) => state.councilData.error,
+};
+
+// Legacy selectors for backward compatibility
+export const useSearchQuery = () => useAppStore(searchSelectors.query);
+export const useSearchResults = () => useAppStore(searchSelectors.results);
+export const useSelectedAddress = () => useAppStore(addressSelectors.selected);
+export const useCouncilData = () => useAppStore(councilDataSelectors.data);
 export const useIsLoadingCouncilData = () =>
-	useAppStore((state) => state.councilData.isLoading);
+	useAppStore(councilDataSelectors.isLoading);

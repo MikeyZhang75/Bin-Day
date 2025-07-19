@@ -5,6 +5,7 @@ import {
 	Platform,
 	Pressable,
 	SafeAreaView,
+	ScrollView,
 	StyleSheet,
 	type TextInput,
 	View,
@@ -27,7 +28,7 @@ import { useAddressSearch } from "@/hooks/useAddressSearch";
 import { useAnimations } from "@/hooks/useAnimations";
 import { useCouncilData } from "@/hooks/useCouncilData";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { useAppStore } from "@/stores/appStore";
+import { searchSelectors, useAppStore } from "@/stores/appStore";
 import type { GooglePrediction } from "@/types/googlePlaces";
 
 export default function HomeScreen() {
@@ -38,12 +39,11 @@ export default function HomeScreen() {
 		useAppStore.getState().setSessionToken(uuidv4());
 	}, []);
 
-	// Store selectors
+	// Store selectors - using performance-optimized selectors
 	const searchQuery = useAppStore((state) => state.search.query);
 	const searchResults = useAppStore((state) => state.search.results);
-	const isSearching = useAppStore((state) => state.search.isSearching);
 	const isFocused = useAppStore((state) => state.search.isFocused);
-	const showResults = useAppStore((state) => state.search.showResults);
+	const isDropdownVisible = useAppStore(searchSelectors.isDropdownVisible);
 	const searchError = useAppStore((state) => state.search.error);
 	const selectedAddress = useAppStore((state) => state.address.selected);
 	const placeDetails = useAppStore((state) => state.address.placeDetails);
@@ -72,7 +72,6 @@ export default function HomeScreen() {
 		clearSearch,
 		clearSelectedAddress,
 		setSearchFocused,
-		setShowResults,
 	} = useAddressSearch();
 
 	const { councilData, isLoadingCouncilData } = useCouncilData();
@@ -81,13 +80,10 @@ export default function HomeScreen() {
 	const {
 		fadeAnim,
 		emptyStateFadeAnim,
-		resultsOpacityAnim,
-		resultsScaleAnim,
 		inputFocusAnim,
 		blurOpacityAnim,
 		shouldRenderBlur,
 		animateSearchFocus,
-		animateResults,
 		animateEmptyState,
 		animateFadeIn,
 		animateBlur,
@@ -113,25 +109,16 @@ export default function HomeScreen() {
 	});
 
 	// Effects
-	useEffect(() => {
-		animateResults(showResults);
-	}, [showResults, animateResults]);
 
 	useEffect(() => {
-		animateEmptyState(!isSearching);
-	}, [isSearching, animateEmptyState]);
+		animateEmptyState(!searchQuery);
+	}, [searchQuery, animateEmptyState]);
 
 	useEffect(() => {
 		animateSearchFocus(isFocused);
-		// Animate blur with dropdown sync info
-		animateBlur(isFocused, searchResults.length > 0 && showResults);
-	}, [
-		isFocused,
-		animateSearchFocus,
-		animateBlur,
-		searchResults.length,
-		showResults,
-	]);
+		// Animate blur with dropdown visibility
+		animateBlur(isFocused, isDropdownVisible);
+	}, [isFocused, isDropdownVisible, animateSearchFocus, animateBlur]);
 
 	useEffect(() => {
 		if (selectedAddress) {
@@ -154,15 +141,10 @@ export default function HomeScreen() {
 
 	const handleSearchFocus = () => {
 		setSearchFocused(true);
-		setShowResults(searchResults.length > 0);
 	};
 
 	const handleSearchBlur = () => {
 		setSearchFocused(false);
-		// Immediately hide results - Reanimated handles smooth coordination
-		if (!selectedAddress) {
-			setShowResults(false);
-		}
 	};
 
 	const handleSearchClear = () => {
@@ -183,130 +165,137 @@ export default function HomeScreen() {
 	// Dismiss keyboard when tapping outside
 	const handleOutsidePress = () => {
 		Keyboard.dismiss();
-		setShowResults(false);
 	};
 
 	return (
 		<ErrorBoundary>
 			<ThemedView style={[styles.container, { backgroundColor }]}>
 				<SafeAreaView style={styles.safeArea}>
-					<Pressable
+					<ScrollView
 						style={styles.contentWrapper}
-						onPress={handleOutsidePress}
-						accessible={false}
+						contentContainerStyle={styles.scrollContent}
+						showsVerticalScrollIndicator={false}
+						keyboardShouldPersistTaps="handled"
 					>
-						{/* Main Content */}
-						<View style={styles.mainContent}>
-							{/* Search Wrapper for proper z-index handling */}
-							{!selectedAddress && (
-								<View style={styles.searchWrapper}>
-									<Pressable onPress={(e) => e.stopPropagation()}>
-										<View style={styles.searchSection}>
-											<SearchBar
-												inputRef={inputRef}
-												searchQuery={searchQuery}
-												onSearchQueryChange={handleSearchQueryChange}
-												onFocus={handleSearchFocus}
-												onBlur={handleSearchBlur}
-												onClear={handleSearchClear}
-												inputFocusAnim={inputFocusAnim}
+						<Pressable
+							style={styles.mainContentPressable}
+							onPress={handleOutsidePress}
+							accessible={false}
+						>
+							{/* Main Content */}
+							<View style={styles.mainContent}>
+								{/* Search Wrapper for proper z-index handling */}
+								{!selectedAddress && (
+									<View style={styles.searchWrapper}>
+										<Pressable onPress={(e) => e.stopPropagation()}>
+											<View style={styles.searchSection}>
+												<SearchBar
+													inputRef={inputRef}
+													searchQuery={searchQuery}
+													onSearchQueryChange={handleSearchQueryChange}
+													onFocus={handleSearchFocus}
+													onBlur={handleSearchBlur}
+													onClear={handleSearchClear}
+													inputFocusAnim={inputFocusAnim}
+												/>
+
+												{/* Search Results Dropdown - Using computed visibility */}
+												{isDropdownVisible && (
+													<SearchResults
+														key="search-results"
+														searchResults={searchResults}
+														onSelectAddress={handleAddressSelect}
+													/>
+												)}
+
+												{/* Error Message */}
+												{searchError && (
+													<ErrorMessage
+														message={searchError}
+														onRetry={() => searchForAddress(searchQuery)}
+													/>
+												)}
+											</View>
+										</Pressable>
+									</View>
+								)}
+
+								{/* Content Area */}
+								<View style={styles.contentContainer}>
+									{/* Blur overlay with proper exit animation */}
+									{shouldRenderBlur && (
+										<Animated.View
+											style={[
+												styles.blurOverlay,
+												{
+													pointerEvents: "none",
+												},
+												blurAnimatedStyle,
+											]}
+										>
+											{Platform.OS === "ios" ? (
+												<BlurView
+													intensity={12}
+													tint={colorScheme}
+													style={StyleSheet.absoluteFillObject}
+												/>
+											) : (
+												<View
+													style={[
+														StyleSheet.absoluteFillObject,
+														{ backgroundColor: "rgba(0,0,0,0.06)" },
+													]}
+												/>
+											)}
+										</Animated.View>
+									)}
+
+									{selectedAddress ? (
+										<Animated.View
+											style={[
+												styles.selectedContent,
+												selectedContentAnimatedStyle,
+											]}
+										>
+											{/* Selected Address Display */}
+											<AddressDisplay
+												selectedAddress={selectedAddress}
+												selectedPlaceDetails={placeDetails}
+												selectedCouncil={council}
+												onClear={handleClearSelectedAddress}
 											/>
 
-											{/* Search Results Dropdown - Always render if results exist to allow exit animation */}
-											{searchResults.length > 0 && (
-												<SearchResults
-													searchResults={searchResults}
-													showResults={showResults}
-													onSelectAddress={handleAddressSelect}
-													resultsOpacityAnim={resultsOpacityAnim}
-													resultsScaleAnim={resultsScaleAnim}
+											{/* Unsupported Council Message */}
+											{unsupportedCouncil && (
+												<UnsupportedCouncilCard
+													councilName={unsupportedCouncil}
+													backgroundColor={cardBgColor}
+													borderColor={borderColor}
 												/>
 											)}
 
-											{/* Error Message */}
-											{searchError && (
-												<ErrorMessage
-													message={searchError}
-													onRetry={() => searchForAddress(searchQuery)}
+											{/* Waste Collection Grid */}
+											{council && (
+												<WasteCollectionGrid
+													councilData={councilData}
+													isLoadingCouncilData={isLoadingCouncilData}
 												/>
 											)}
-										</View>
-									</Pressable>
+										</Animated.View>
+									) : (
+										<Animated.View
+											style={[
+												styles.emptyStateWrapper,
+												emptyStateAnimatedStyle,
+											]}
+										>
+											<EmptyState />
+										</Animated.View>
+									)}
 								</View>
-							)}
-
-							{/* Content Area */}
-							<View style={styles.contentContainer}>
-								{/* Blur overlay with proper exit animation */}
-								{shouldRenderBlur && (
-									<Animated.View
-										style={[
-											styles.blurOverlay,
-											{
-												pointerEvents: "none",
-											},
-											blurAnimatedStyle,
-										]}
-									>
-										{Platform.OS === "ios" ? (
-											<BlurView
-												intensity={12}
-												tint={colorScheme}
-												style={StyleSheet.absoluteFillObject}
-											/>
-										) : (
-											<View
-												style={[
-													StyleSheet.absoluteFillObject,
-													{ backgroundColor: "rgba(0,0,0,0.06)" },
-												]}
-											/>
-										)}
-									</Animated.View>
-								)}
-
-								{selectedAddress ? (
-									<Animated.View
-										style={[
-											styles.selectedContent,
-											selectedContentAnimatedStyle,
-										]}
-									>
-										{/* Selected Address Display */}
-										<AddressDisplay
-											selectedAddress={selectedAddress}
-											selectedPlaceDetails={placeDetails}
-											selectedCouncil={council}
-											onClear={handleClearSelectedAddress}
-										/>
-
-										{/* Unsupported Council Message */}
-										{unsupportedCouncil && (
-											<UnsupportedCouncilCard
-												councilName={unsupportedCouncil}
-												backgroundColor={cardBgColor}
-												borderColor={borderColor}
-											/>
-										)}
-
-										{/* Waste Collection Grid */}
-										{council && (
-											<WasteCollectionGrid
-												councilData={councilData}
-												isLoadingCouncilData={isLoadingCouncilData}
-											/>
-										)}
-									</Animated.View>
-								) : (
-									<Animated.View
-										style={[styles.emptyStateWrapper, emptyStateAnimatedStyle]}
-									>
-										<EmptyState />
-									</Animated.View>
-								)}
 							</View>
-						</View>
-					</Pressable>
+						</Pressable>
+					</ScrollView>
 				</SafeAreaView>
 			</ThemedView>
 		</ErrorBoundary>
@@ -323,10 +312,17 @@ const styles = StyleSheet.create({
 	contentWrapper: {
 		flex: 1,
 	},
+	scrollContent: {
+		flexGrow: 1,
+	},
+	mainContentPressable: {
+		flex: 1,
+	},
 	mainContent: {
 		flex: 1,
 		paddingHorizontal: 20,
 		paddingTop: Platform.OS === "ios" ? 20 : 40,
+		paddingBottom: 100,
 	},
 	searchWrapper: {
 		zIndex: 100,

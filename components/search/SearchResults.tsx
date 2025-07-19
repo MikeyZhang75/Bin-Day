@@ -1,24 +1,24 @@
 import { useCallback, useMemo } from "react";
-import { FlatList, StyleSheet, View } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { Dimensions, FlatList, StyleSheet, View } from "react-native";
+import Animated, { Easing, FadeIn, FadeOut } from "react-native-reanimated";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import type { GooglePrediction } from "@/types/googlePlaces";
 import { SearchResultItem } from "./SearchResultItem";
 
 interface SearchResultsProps {
 	searchResults: GooglePrediction[];
-	showResults: boolean;
 	onSelectAddress: (prediction: GooglePrediction) => void;
-	resultsOpacityAnim: Animated.SharedValue<number>;
-	resultsScaleAnim: Animated.SharedValue<number>;
 }
+
+// Custom entering animation - smooth fade in
+const customEntering = FadeIn.duration(300).easing(Easing.out(Easing.cubic));
+
+// Custom exiting animation - smooth fade out
+const customExiting = FadeOut.duration(250).easing(Easing.in(Easing.cubic));
 
 export function SearchResults({
 	searchResults,
-	showResults,
 	onSelectAddress,
-	resultsOpacityAnim,
-	resultsScaleAnim,
 }: SearchResultsProps) {
 	const cardBgColor = useThemeColor(
 		{ light: "#FFFFFF", dark: "#1C1C1E" },
@@ -29,15 +29,24 @@ export function SearchResults({
 		"text",
 	);
 
-	const animatedStyle = useAnimatedStyle(() => {
-		return {
-			opacity: resultsOpacityAnim?.value || 0,
-			transform: [{ scale: resultsScaleAnim?.value || 0.95 }],
-		};
-	});
+	// Get screen dimensions for dynamic height calculation
+	const screenHeight = Dimensions.get("window").height;
+	const maxVisibleHeight = screenHeight * 0.5; // 50% of screen height
 
-	// Memoize data to prevent unnecessary re-renders
-	const displayData = useMemo(() => searchResults.slice(0, 3), [searchResults]);
+	// Use search results directly
+	const displayData = useMemo(() => searchResults || [], [searchResults]);
+
+	// Calculate actual content height based on display data
+	const itemHeight = 72; // minHeight from SearchResultItem
+	const separatorHeight = 1;
+	const totalItemHeight = itemHeight + separatorHeight;
+	const totalContentHeight = Math.max(
+		0,
+		displayData.length * totalItemHeight - separatorHeight,
+	);
+
+	// Determine if scrolling is needed
+	const needsScroll = totalContentHeight > maxVisibleHeight;
 
 	// Memoize callbacks
 	const renderItem = useCallback(
@@ -58,8 +67,8 @@ export function SearchResults({
 	// Optimized getItemLayout with correct separator calculations
 	const getItemLayout = useCallback(
 		(_: ArrayLike<GooglePrediction> | null | undefined, index: number) => ({
-			length: 72, // minHeight from SearchResultItem styles
-			offset: 72 * index + index, // Account for 1px separator between items
+			length: 72, // itemHeight constant
+			offset: 73 * index, // (itemHeight + separatorHeight) * index
 			index,
 		}),
 		[],
@@ -70,43 +79,42 @@ export function SearchResults({
 		[borderColor],
 	);
 
-	// Don't unmount immediately to allow exit animation
-	if (searchResults.length === 0) {
-		return null;
-	}
-
 	return (
-		<View
+		<Animated.View
+			entering={customEntering}
+			exiting={customExiting}
 			style={styles.shadowWrapper}
-			pointerEvents={showResults ? "auto" : "none"}
+			pointerEvents="auto"
 		>
-			<Animated.View
+			<View
 				style={[
 					styles.resultsContainer,
 					{
 						backgroundColor: cardBgColor,
 						borderColor,
+						maxHeight: maxVisibleHeight,
 					},
-					animatedStyle,
 				]}
-				onStartShouldSetResponder={() => true}
-				onResponderTerminationRequest={() => false}
 			>
 				<FlatList
-					data={displayData}
+					data={displayData || []}
 					renderItem={renderItem}
 					keyExtractor={keyExtractor}
 					keyboardShouldPersistTaps="always"
-					scrollEnabled={false}
-					removeClippedSubviews={true}
-					initialNumToRender={3}
-					maxToRenderPerBatch={3}
-					windowSize={3}
+					scrollEnabled={needsScroll}
+					removeClippedSubviews={false}
+					initialNumToRender={10}
+					maxToRenderPerBatch={10}
+					windowSize={10}
 					getItemLayout={getItemLayout}
 					ItemSeparatorComponent={itemSeparatorComponent}
+					showsVerticalScrollIndicator={needsScroll}
+					bounces={false}
+					contentContainerStyle={{ flexGrow: 1 }}
+					extraData={displayData.length}
 				/>
-			</Animated.View>
-		</View>
+			</View>
+		</Animated.View>
 	);
 }
 
@@ -116,7 +124,8 @@ const styles = StyleSheet.create({
 		top: 64,
 		left: 0,
 		right: 0,
-		maxHeight: 240,
+		zIndex: 1000, // Ensure dropdown appears above other content
+		// Removed maxHeight to allow flexible sizing
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
@@ -130,6 +139,8 @@ const styles = StyleSheet.create({
 		borderRadius: 16,
 		borderWidth: 1,
 		overflow: "hidden",
+		// Ensure the container can grow to show content
+		flexShrink: 0,
 	},
 	separator: {
 		height: 1,
