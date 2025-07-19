@@ -58,6 +58,7 @@ export function WasteCollectionGrid({
 		"text",
 	);
 	const tintColor = useThemeColor({}, "tint");
+	const sectionTitleColor = useThemeColor({}, "text");
 
 	// Create waste items array, but it will be empty if no data
 	const unsortedWasteItems =
@@ -66,13 +67,14 @@ export function WasteCollectionGrid({
 					const date = councilData.result?.[
 						type.key as keyof typeof councilData.result
 					] as number | null;
-					if (type.key === "glass" && !date) return null;
+					// Don't display any card with N/A date
+					if (!date) return null;
 					return { type, date };
 				})
 			: [];
 
 	// Always call the hook
-	const wasteItems = useWasteSorting(unsortedWasteItems);
+	const { today, upcoming, future } = useWasteSorting(unsortedWasteItems);
 
 	if (isLoadingCouncilData) {
 		return (
@@ -90,22 +92,92 @@ export function WasteCollectionGrid({
 	}
 
 	return (
-		<View style={styles.wasteGrid}>
-			{wasteItems.map(
-				(item) =>
-					item && (
-						<WasteCard
-							key={item.type.key}
-							type={item.type}
-							formattedDate={formatDate(item.date)}
-						/>
-					),
+		<View style={styles.container}>
+			{/* Today Section */}
+			{today.length > 0 && (
+				<View style={styles.section}>
+					<ThemedText
+						style={[
+							styles.sectionTitle,
+							styles.todayTitle,
+							{ color: sectionTitleColor },
+						]}
+					>
+						Today
+					</ThemedText>
+					<View style={styles.wasteGrid}>
+						{today.map((item) => (
+							<WasteCard
+								key={item.type.key}
+								type={item.type}
+								formattedDate={formatDate(item.date)}
+							/>
+						))}
+					</View>
+				</View>
+			)}
+
+			{/* Upcoming Section */}
+			{upcoming.length > 0 && (
+				<View style={styles.section}>
+					<ThemedText
+						style={[styles.sectionTitle, { color: sectionTitleColor }]}
+					>
+						Upcoming
+					</ThemedText>
+					<View style={styles.wasteGrid}>
+						{upcoming.map((item) => (
+							<WasteCard
+								key={item.type.key}
+								type={item.type}
+								formattedDate={formatDate(item.date)}
+							/>
+						))}
+					</View>
+				</View>
+			)}
+
+			{/* Future Section */}
+			{future.length > 0 && (
+				<View style={styles.section}>
+					<ThemedText
+						style={[styles.sectionTitle, { color: sectionTitleColor }]}
+					>
+						Future Collections
+					</ThemedText>
+					<View style={styles.wasteGrid}>
+						{future.map((item) => (
+							<WasteCard
+								key={item.type.key}
+								type={item.type}
+								formattedDate={formatDate(item.date)}
+							/>
+						))}
+					</View>
+				</View>
 			)}
 		</View>
 	);
 }
 
 const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+	},
+	section: {
+		marginBottom: 24,
+	},
+	sectionTitle: {
+		fontSize: 18,
+		fontWeight: "600",
+		marginBottom: 12,
+		opacity: 0.8,
+	},
+	todayTitle: {
+		fontSize: 20,
+		fontWeight: "700",
+		opacity: 1,
+	},
 	wasteGrid: {
 		flexDirection: "row",
 		flexWrap: "wrap",
