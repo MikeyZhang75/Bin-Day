@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // YarraRanges-specific regex patterns for waste types
 // Test results show: FOGO, Recycling Collection, Rubbish Collection
@@ -17,7 +17,7 @@ const yarraRangesWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchYarraRangesData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.YARRA_RANGES, {
+	return processGranicusCouncilData(placeDetails, COUNCIL_NAMES.YARRA_RANGES, {
 		searchApiUrl: "https://www.yarraranges.vic.gov.au/api/v1/myarea/search",
 		wasteServicesUrl:
 			"https://www.yarraranges.vic.gov.au/ocapi/Public/myarea/wasteservices",

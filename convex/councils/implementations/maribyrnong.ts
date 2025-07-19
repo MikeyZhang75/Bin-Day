@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Maribyrnong-specific regex patterns for waste types
 const maribyrnongWastePatterns: WasteTypeRegexPatterns = {
@@ -16,10 +16,14 @@ const maribyrnongWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchMaribyrnongData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.MARIBYRNONG_CITY, {
-		searchApiUrl: "https://www.maribyrnong.vic.gov.au/api/v1/myarea/search",
-		wasteServicesUrl:
-			"https://www.maribyrnong.vic.gov.au/ocapi/Public/myarea/wasteservices",
-		wasteTypePatterns: maribyrnongWastePatterns,
-	});
+	return processGranicusCouncilData(
+		placeDetails,
+		COUNCIL_NAMES.MARIBYRNONG_CITY,
+		{
+			searchApiUrl: "https://www.maribyrnong.vic.gov.au/api/v1/myarea/search",
+			wasteServicesUrl:
+				"https://www.maribyrnong.vic.gov.au/ocapi/Public/myarea/wasteservices",
+			wasteTypePatterns: maribyrnongWastePatterns,
+		},
+	);
 }

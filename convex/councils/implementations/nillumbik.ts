@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Nillumbik-specific regex patterns for waste types
 const nillumbikWastePatterns: WasteTypeRegexPatterns = {
@@ -16,10 +16,14 @@ const nillumbikWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchNillumbikData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.NILLUMBIK_SHIRE, {
-		searchApiUrl: "https://www.nillumbik.vic.gov.au/api/v1/myarea/search",
-		wasteServicesUrl:
-			"https://www.nillumbik.vic.gov.au/ocapi/Public/myarea/wasteservices",
-		wasteTypePatterns: nillumbikWastePatterns,
-	});
+	return processGranicusCouncilData(
+		placeDetails,
+		COUNCIL_NAMES.NILLUMBIK_SHIRE,
+		{
+			searchApiUrl: "https://www.nillumbik.vic.gov.au/api/v1/myarea/search",
+			wasteServicesUrl:
+				"https://www.nillumbik.vic.gov.au/ocapi/Public/myarea/wasteservices",
+			wasteTypePatterns: nillumbikWastePatterns,
+		},
+	);
 }

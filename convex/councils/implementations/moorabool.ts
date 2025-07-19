@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Moorabool-specific regex patterns for waste types
 const mooraboolWastePatterns: WasteTypeRegexPatterns = {
@@ -16,10 +16,14 @@ const mooraboolWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchMooraboolData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.MOORABOOL_SHIRE, {
-		searchApiUrl: "https://www.moorabool.vic.gov.au/api/v1/myarea/search",
-		wasteServicesUrl:
-			"https://www.moorabool.vic.gov.au/ocapi/Public/myarea/wasteservices",
-		wasteTypePatterns: mooraboolWastePatterns,
-	});
+	return processGranicusCouncilData(
+		placeDetails,
+		COUNCIL_NAMES.MOORABOOL_SHIRE,
+		{
+			searchApiUrl: "https://www.moorabool.vic.gov.au/api/v1/myarea/search",
+			wasteServicesUrl:
+				"https://www.moorabool.vic.gov.au/ocapi/Public/myarea/wasteservices",
+			wasteTypePatterns: mooraboolWastePatterns,
+		},
+	);
 }

@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Monash-specific regex patterns for waste types
 const monashWastePatterns: WasteTypeRegexPatterns = {
@@ -18,10 +18,14 @@ const monashWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchMonashData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.CITY_OF_MONASH, {
-		searchApiUrl: "https://www.monash.vic.gov.au/api/v1/myarea/search",
-		wasteServicesUrl:
-			"https://www.monash.vic.gov.au/ocapi/Public/myarea/wasteservices",
-		wasteTypePatterns: monashWastePatterns,
-	});
+	return processGranicusCouncilData(
+		placeDetails,
+		COUNCIL_NAMES.CITY_OF_MONASH,
+		{
+			searchApiUrl: "https://www.monash.vic.gov.au/api/v1/myarea/search",
+			wasteServicesUrl:
+				"https://www.monash.vic.gov.au/ocapi/Public/myarea/wasteservices",
+			wasteTypePatterns: monashWastePatterns,
+		},
+	);
 }

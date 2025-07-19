@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Pyrenees-specific regex patterns for waste types
 // Test results show: General Waste, Glass, Green Waste, Recycling
@@ -19,10 +19,14 @@ const pyreneesWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchPyreneesData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.PYRENEES_SHIRE, {
-		searchApiUrl: "https://www.pyrenees.vic.gov.au/api/v1/myarea/search",
-		wasteServicesUrl:
-			"https://www.pyrenees.vic.gov.au/ocapi/Public/myarea/wasteservices",
-		wasteTypePatterns: pyreneesWastePatterns,
-	});
+	return processGranicusCouncilData(
+		placeDetails,
+		COUNCIL_NAMES.PYRENEES_SHIRE,
+		{
+			searchApiUrl: "https://www.pyrenees.vic.gov.au/api/v1/myarea/search",
+			wasteServicesUrl:
+				"https://www.pyrenees.vic.gov.au/ocapi/Public/myarea/wasteservices",
+			wasteTypePatterns: pyreneesWastePatterns,
+		},
+	);
 }

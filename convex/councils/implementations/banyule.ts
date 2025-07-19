@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Banyule-specific regex patterns for waste types
 const banyuleWastePatterns: WasteTypeRegexPatterns = {
@@ -17,7 +17,7 @@ const banyuleWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchBanyuleData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.BANYULE_CITY, {
+	return processGranicusCouncilData(placeDetails, COUNCIL_NAMES.BANYULE_CITY, {
 		searchApiUrl: "https://www.banyule.vic.gov.au/api/v1/myarea/search",
 		wasteServicesUrl:
 			"https://www.banyule.vic.gov.au/ocapi/Public/myarea/wasteservices",

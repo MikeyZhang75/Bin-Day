@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Wangaratta-specific regex patterns for waste types
 // Test results show: General Waste, Recycling
@@ -15,10 +15,14 @@ const wangarattaWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchWangarattaData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.WANGARATTA_CITY, {
-		searchApiUrl: "https://www.wangaratta.vic.gov.au/api/v1/myarea/search",
-		wasteServicesUrl:
-			"https://www.wangaratta.vic.gov.au/ocapi/Public/myarea/wasteservices",
-		wasteTypePatterns: wangarattaWastePatterns,
-	});
+	return processGranicusCouncilData(
+		placeDetails,
+		COUNCIL_NAMES.WANGARATTA_CITY,
+		{
+			searchApiUrl: "https://www.wangaratta.vic.gov.au/api/v1/myarea/search",
+			wasteServicesUrl:
+				"https://www.wangaratta.vic.gov.au/ocapi/Public/myarea/wasteservices",
+			wasteTypePatterns: wangarattaWastePatterns,
+		},
+	);
 }

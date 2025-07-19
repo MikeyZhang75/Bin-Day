@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // MorningtonPeninsula-specific regex patterns for waste types
 const morningtonPeninsulaWastePatterns: WasteTypeRegexPatterns = {
@@ -18,10 +18,14 @@ const morningtonPeninsulaWastePatterns: WasteTypeRegexPatterns = {
 export async function fetchMorningtonPeninsulaData(
 	placeDetails: GooglePlaceDetails,
 ) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.MORNINGTON_PENINSULA, {
-		searchApiUrl: "https://www.mornpen.vic.gov.au/api/v1/myarea/search",
-		wasteServicesUrl:
-			"https://www.mornpen.vic.gov.au/ocapi/Public/myarea/wasteservices",
-		wasteTypePatterns: morningtonPeninsulaWastePatterns,
-	});
+	return processGranicusCouncilData(
+		placeDetails,
+		COUNCIL_NAMES.MORNINGTON_PENINSULA,
+		{
+			searchApiUrl: "https://www.mornpen.vic.gov.au/api/v1/myarea/search",
+			wasteServicesUrl:
+				"https://www.mornpen.vic.gov.au/ocapi/Public/myarea/wasteservices",
+			wasteTypePatterns: morningtonPeninsulaWastePatterns,
+		},
+	);
 }

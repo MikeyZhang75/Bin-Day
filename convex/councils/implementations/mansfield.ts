@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Mansfield-specific regex patterns for waste types
 const mansfieldWastePatterns: WasteTypeRegexPatterns = {
@@ -16,10 +16,14 @@ const mansfieldWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchMansfieldData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.MANSFIELD_SHIRE, {
-		searchApiUrl: "https://www.mansfield.vic.gov.au/api/v1/myarea/search",
-		wasteServicesUrl:
-			"https://www.mansfield.vic.gov.au/ocapi/Public/myarea/wasteservices",
-		wasteTypePatterns: mansfieldWastePatterns,
-	});
+	return processGranicusCouncilData(
+		placeDetails,
+		COUNCIL_NAMES.MANSFIELD_SHIRE,
+		{
+			searchApiUrl: "https://www.mansfield.vic.gov.au/api/v1/myarea/search",
+			wasteServicesUrl:
+				"https://www.mansfield.vic.gov.au/ocapi/Public/myarea/wasteservices",
+			wasteTypePatterns: mansfieldWastePatterns,
+		},
+	);
 }
