@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import "react-native-get-random-values";
-import { BlurView } from "expo-blur";
 import { v4 as uuidv4 } from "uuid";
 import { AddressDisplay } from "@/components/address/AddressDisplay";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -62,8 +61,6 @@ export default function HomeScreen() {
 		{ light: "#E5E5E7", dark: "#2C2C2E" },
 		"text",
 	);
-	const colorScheme =
-		useThemeColor({}, "background") === "#000000" ? "dark" : "light";
 
 	// Custom hooks
 	const {
@@ -81,20 +78,10 @@ export default function HomeScreen() {
 		fadeAnim,
 		emptyStateFadeAnim,
 		inputFocusAnim,
-		blurOpacityAnim,
-		shouldRenderBlur,
 		animateSearchFocus,
 		animateEmptyState,
 		animateFadeIn,
-		animateBlur,
 	} = useAnimations();
-
-	// Animated styles
-	const blurAnimatedStyle = useAnimatedStyle(() => {
-		return {
-			opacity: blurOpacityAnim.value,
-		};
-	});
 
 	const selectedContentAnimatedStyle = useAnimatedStyle(() => {
 		return {
@@ -116,9 +103,7 @@ export default function HomeScreen() {
 
 	useEffect(() => {
 		animateSearchFocus(isFocused);
-		// Animate blur with dropdown visibility
-		animateBlur(isFocused, isDropdownVisible);
-	}, [isFocused, isDropdownVisible, animateSearchFocus, animateBlur]);
+	}, [isFocused, animateSearchFocus]);
 
 	useEffect(() => {
 		if (selectedAddress) {
@@ -144,12 +129,17 @@ export default function HomeScreen() {
 	};
 
 	const handleSearchBlur = () => {
-		setSearchFocused(false);
+		// Only set focused to false if there's no text in the search
+		if (searchQuery.length === 0) {
+			setSearchFocused(false);
+		}
 	};
 
 	const handleSearchClear = () => {
 		clearSearch();
 		inputRef.current?.focus();
+		// Ensure focus is maintained after clearing
+		setSearchFocused(true);
 	};
 
 	const handleAddressSelect = (prediction: GooglePrediction) => {
@@ -165,6 +155,10 @@ export default function HomeScreen() {
 	// Dismiss keyboard when tapping outside
 	const handleOutsidePress = () => {
 		Keyboard.dismiss();
+		// Clear focus only if there's no text in the search
+		if (searchQuery.length === 0) {
+			setSearchFocused(false);
+		}
 	};
 
 	return (
@@ -222,34 +216,6 @@ export default function HomeScreen() {
 
 								{/* Content Area */}
 								<View style={styles.contentContainer}>
-									{/* Blur overlay with proper exit animation */}
-									{shouldRenderBlur && (
-										<Animated.View
-											style={[
-												styles.blurOverlay,
-												{
-													pointerEvents: "none",
-												},
-												blurAnimatedStyle,
-											]}
-										>
-											{Platform.OS === "ios" ? (
-												<BlurView
-													intensity={12}
-													tint={colorScheme}
-													style={StyleSheet.absoluteFillObject}
-												/>
-											) : (
-												<View
-													style={[
-														StyleSheet.absoluteFillObject,
-														{ backgroundColor: "rgba(0,0,0,0.06)" },
-													]}
-												/>
-											)}
-										</Animated.View>
-									)}
-
 									{selectedAddress ? (
 										<Animated.View
 											style={[
@@ -334,14 +300,6 @@ const styles = StyleSheet.create({
 	contentContainer: {
 		flex: 1,
 		position: "relative",
-	},
-	blurOverlay: {
-		position: "absolute",
-		top: 0,
-		left: 0,
-		right: 0,
-		bottom: 0,
-		zIndex: 1,
 	},
 	selectedContent: {
 		gap: 16,

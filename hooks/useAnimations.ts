@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
 	cancelAnimation,
 	Easing,
-	runOnJS,
 	useSharedValue,
 	withTiming,
 } from "react-native-reanimated";
@@ -14,10 +13,6 @@ export function useAnimations() {
 	const resultsOpacityAnim = useSharedValue(0);
 	const resultsScaleAnim = useSharedValue(0.95);
 	const inputFocusAnim = useSharedValue(0);
-	const blurOpacityAnim = useSharedValue(0);
-
-	// State to track if blur should be rendered
-	const [shouldRenderBlur, setShouldRenderBlur] = useState(false);
 
 	// Start animations
 	const animateSearchFocus = (focused: boolean) => {
@@ -25,32 +20,6 @@ export function useAnimations() {
 			duration: 350,
 			easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 		});
-	};
-
-	// Animate blur overlay with proper exit animation
-	const animateBlur = (show: boolean, hasDropdown = false) => {
-		if (show) {
-			setShouldRenderBlur(true);
-			blurOpacityAnim.value = withTiming(1, {
-				duration: 300,
-				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-			});
-		} else {
-			// Sync with dropdown close animation if dropdown is visible
-			const duration = hasDropdown ? 300 : 250;
-			blurOpacityAnim.value = withTiming(
-				0,
-				{
-					duration,
-					easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-				},
-				(finished) => {
-					if (finished) {
-						runOnJS(setShouldRenderBlur)(false);
-					}
-				},
-			);
-		}
 	};
 
 	const animateResults = (show: boolean) => {
@@ -100,7 +69,6 @@ export function useAnimations() {
 			cancelAnimation(resultsOpacityAnim);
 			cancelAnimation(resultsScaleAnim);
 			cancelAnimation(inputFocusAnim);
-			cancelAnimation(blurOpacityAnim);
 		};
 	}, [
 		fadeAnim,
@@ -108,7 +76,6 @@ export function useAnimations() {
 		resultsOpacityAnim,
 		resultsScaleAnim,
 		inputFocusAnim,
-		blurOpacityAnim,
 	]);
 
 	return {
@@ -118,13 +85,10 @@ export function useAnimations() {
 		resultsOpacityAnim,
 		resultsScaleAnim,
 		inputFocusAnim,
-		blurOpacityAnim,
-		shouldRenderBlur,
 		// Animation functions
 		animateSearchFocus,
 		animateResults,
 		animateEmptyState,
 		animateFadeIn,
-		animateBlur,
 	};
 }

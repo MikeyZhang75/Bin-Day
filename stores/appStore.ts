@@ -135,6 +135,7 @@ export const useAppStore = create<AppStore>()(
 						...state.search,
 						query: "",
 						results: [],
+						// Keep focus if there was still text (although we're clearing it)
 						isFocused: false,
 					},
 				})),
@@ -206,7 +207,8 @@ export const searchSelectors = {
 	sessionToken: (state: AppStore) => state.search.sessionToken,
 	// Computed selector for dropdown visibility
 	isDropdownVisible: (state: AppStore) =>
-		state.search.isFocused && state.search.results.length > 0,
+		(state.search.isFocused || state.search.query.length > 0) &&
+		state.search.results.length > 0,
 };
 
 export const addressSelectors = {
