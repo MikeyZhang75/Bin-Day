@@ -1,6 +1,5 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
-import type { CouncilName } from "./councils/core";
 import {
 	councilHandlers,
 	getSupportedCouncilNames,
@@ -24,16 +23,8 @@ export type CouncilData = {
 // Create a union type of all supported council names for Convex schema
 const createCouncilUnion = () => {
 	const supportedCouncils = getSupportedCouncilNames();
-	// We need to use a type assertion here because TypeScript can't infer
-	// the variadic union type from a dynamic array
 	const literals = supportedCouncils.map((council) => v.literal(council));
-	// TypeScript limitation: can't infer union type from dynamic array
-	return v.union(
-		...(literals as [
-			ReturnType<typeof v.literal>,
-			...ReturnType<typeof v.literal>[],
-		]),
-	);
+	return v.union(...literals);
 };
 
 export const getCouncilData = action({
@@ -73,7 +64,7 @@ export const getCouncilData = action({
 
 		// The council parameter is already validated by Convex schema
 		// No need to normalize since it's a literal union type
-		const handler = councilHandlers[council as CouncilName];
+		const handler = councilHandlers[council];
 
 		if (!handler) {
 			return {
