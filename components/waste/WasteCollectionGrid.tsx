@@ -159,7 +159,7 @@ export function WasteCollectionGrid({
 	// Render skeleton loading state
 	if (isLoadingCouncilData) {
 		return (
-			<View style={styles.container}>
+			<View>
 				<Animated.View
 					entering={FadeIn.duration(300)}
 					style={styles.skeletonSection}
@@ -194,7 +194,7 @@ export function WasteCollectionGrid({
 	let cardIndex = 0;
 
 	return (
-		<View style={styles.container}>
+		<View>
 			{/* Today Section */}
 			{today.length > 0 && (
 				<Animated.View
@@ -330,9 +330,6 @@ export function WasteCollectionGrid({
 }
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-	},
 	section: {
 		marginBottom: SPACING.lg,
 	},

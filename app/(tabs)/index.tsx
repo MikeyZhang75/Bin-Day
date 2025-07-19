@@ -5,7 +5,6 @@ import {
 	Platform,
 	Pressable,
 	SafeAreaView,
-	ScrollView,
 	StyleSheet,
 	type TextInput,
 	View,
@@ -183,12 +182,7 @@ export default function HomeScreen() {
 		<ErrorBoundary>
 			<ThemedView style={[styles.container, { backgroundColor }]}>
 				<SafeAreaView style={styles.safeArea}>
-					<ScrollView
-						style={styles.contentWrapper}
-						contentContainerStyle={styles.scrollContent}
-						showsVerticalScrollIndicator={false}
-						keyboardShouldPersistTaps="handled"
-					>
+					<View style={styles.contentWrapper}>
 						<Pressable
 							style={styles.mainContentPressable}
 							onPress={handleOutsidePress}
@@ -279,7 +273,7 @@ export default function HomeScreen() {
 								</View>
 							</View>
 						</Pressable>
-					</ScrollView>
+					</View>
 				</SafeAreaView>
 			</ThemedView>
 		</ErrorBoundary>
@@ -296,9 +290,6 @@ const styles = StyleSheet.create({
 	contentWrapper: {
 		flex: 1,
 	},
-	scrollContent: {
-		flexGrow: 1,
-	},
 	mainContentPressable: {
 		flex: 1,
 	},
@@ -306,7 +297,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		paddingHorizontal: 20,
 		paddingTop: Platform.OS === "ios" ? 20 : 40,
-		paddingBottom: 100,
+		paddingBottom: 20,
 	},
 	searchWrapper: {
 		zIndex: 100,
@@ -318,9 +309,11 @@ const styles = StyleSheet.create({
 	contentContainer: {
 		flex: 1,
 		position: "relative",
+		overflow: "hidden",
 	},
 	selectedContent: {
 		gap: 16,
+		paddingBottom: 20,
 	},
 	emptyStateWrapper: {
 		flex: 1,
