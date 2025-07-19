@@ -98,8 +98,9 @@ export default function HomeScreen() {
 	// Effects
 
 	useEffect(() => {
-		animateEmptyState(!searchQuery);
-	}, [searchQuery, animateEmptyState]);
+		// Fade empty state when input is focused
+		animateEmptyState(!isFocused);
+	}, [isFocused, animateEmptyState]);
 
 	useEffect(() => {
 		animateSearchFocus(isFocused);
