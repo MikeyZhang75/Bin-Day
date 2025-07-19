@@ -81,6 +81,7 @@ export default function HomeScreen() {
 		animateSearchFocus,
 		animateEmptyState,
 		animateFadeIn,
+		animateFadeOut,
 	} = useAnimations();
 
 	const selectedContentAnimatedStyle = useAnimatedStyle(() => {
@@ -98,19 +99,34 @@ export default function HomeScreen() {
 	// Effects
 
 	useEffect(() => {
-		// Fade empty state when input is focused
-		animateEmptyState(!isFocused);
-	}, [isFocused, animateEmptyState]);
+		// Fade empty state when input is focused AND no address is selected
+		console.log(
+			"[EmptyState Animation] isFocused:",
+			isFocused,
+			"selectedAddress:",
+			!!selectedAddress,
+		);
+		if (!selectedAddress) {
+			console.log(
+				"[EmptyState Animation] Calling animateEmptyState with:",
+				!isFocused,
+			);
+			animateEmptyState(!isFocused);
+		}
+	}, [isFocused, selectedAddress, animateEmptyState]);
 
 	useEffect(() => {
 		animateSearchFocus(isFocused);
 	}, [isFocused, animateSearchFocus]);
 
 	useEffect(() => {
+		console.log("[Fade Effect] selectedAddress changed:", !!selectedAddress);
 		if (selectedAddress) {
 			animateFadeIn();
+		} else {
+			animateFadeOut();
 		}
-	}, [selectedAddress, animateFadeIn]);
+	}, [selectedAddress, animateFadeIn, animateFadeOut]);
 
 	// Cleanup search results on unmount
 	useEffect(() => {
@@ -149,6 +165,7 @@ export default function HomeScreen() {
 	};
 
 	const handleClearSelectedAddress = () => {
+		console.log("[Clear Address] Clearing selected address");
 		clearSelectedAddress();
 		Keyboard.dismiss();
 	};

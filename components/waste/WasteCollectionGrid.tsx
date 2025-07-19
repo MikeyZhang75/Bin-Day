@@ -3,18 +3,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import Animated, {
-	Easing,
 	FadeIn,
 	FadeInDown,
 	useAnimatedStyle,
-	useSharedValue,
-	withDelay,
-	withRepeat,
-	withTiming,
 } from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import type { CouncilData } from "@/convex/councilServices";
+import { ANIMATION_CONFIG, useShimmerAnimation } from "@/hooks/useAnimations";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useWasteSorting } from "@/hooks/useWasteSorting";
 import { formatDate } from "@/utils/dateFormatters";
@@ -30,15 +26,7 @@ const SPACING = {
 } as const;
 
 // Animation constants
-const ANIMATION_CONFIG = {
-	duration: 350,
-	staggerDelay: 50,
-	easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-	spring: {
-		damping: 18,
-		stiffness: 200,
-	},
-} as const;
+const ANIMATION_STAGGER_DELAY = 50;
 
 const WASTE_TYPES: WasteType[] = [
 	{
@@ -86,22 +74,13 @@ interface WasteCollectionGridProps {
 
 // Skeleton loading component
 const SkeletonCard = ({ delay }: { delay: number }) => {
-	const shimmerAnim = useSharedValue(0);
+	const { shimmerAnim, startShimmer } = useShimmerAnimation(delay);
 	const colorScheme =
 		useThemeColor({}, "background") === "#FFFFFF" ? "light" : "dark";
 
 	useEffect(() => {
-		shimmerAnim.value = withDelay(
-			delay,
-			withRepeat(
-				withTiming(1, {
-					duration: 1500,
-					easing: Easing.linear,
-				}),
-				-1,
-			),
-		);
-	}, [delay, shimmerAnim]);
+		startShimmer();
+	}, [startShimmer]);
 
 	const animatedStyle = useAnimatedStyle(() => {
 		const translateX = shimmerAnim.value * 200;
@@ -246,7 +225,7 @@ export function WasteCollectionGrid({
 						</ThemedText>
 						<View style={styles.wasteGrid}>
 							{today.map((item) => {
-								const delay = cardIndex++ * ANIMATION_CONFIG.staggerDelay;
+								const delay = cardIndex++ * ANIMATION_STAGGER_DELAY;
 								return (
 									<WasteCard
 										key={item.type.key}
@@ -285,7 +264,7 @@ export function WasteCollectionGrid({
 						</ThemedText>
 						<View style={styles.wasteGrid}>
 							{upcoming.map((item) => {
-								const delay = cardIndex++ * ANIMATION_CONFIG.staggerDelay;
+								const delay = cardIndex++ * ANIMATION_STAGGER_DELAY;
 								return (
 									<WasteCard
 										key={item.type.key}
@@ -330,7 +309,7 @@ export function WasteCollectionGrid({
 						</ThemedText>
 						<View style={styles.wasteGrid}>
 							{future.map((item) => {
-								const delay = cardIndex++ * ANIMATION_CONFIG.staggerDelay;
+								const delay = cardIndex++ * ANIMATION_STAGGER_DELAY;
 								return (
 									<WasteCard
 										key={item.type.key}

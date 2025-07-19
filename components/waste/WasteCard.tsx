@@ -2,14 +2,12 @@ import * as Haptics from "expo-haptics";
 import React from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import Animated, {
-	Easing,
 	FadeInDown,
 	useAnimatedStyle,
-	useSharedValue,
-	withSpring,
 } from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { ANIMATION_CONFIG, usePressAnimation } from "@/hooks/useAnimations";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export interface WasteType {
@@ -35,16 +33,6 @@ const SPACING = {
 	md: 16,
 	lg: 24,
 	xl: 32,
-} as const;
-
-// Animation constants
-const ANIMATION_CONFIG = {
-	duration: 350,
-	easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-	spring: {
-		damping: 18,
-		stiffness: 200,
-	},
 } as const;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -75,9 +63,18 @@ export const WasteCard = React.memo(
 		const initialScale =
 			priority === "today" ? 1.05 : priority === "future" ? 0.95 : 1;
 
-		// Animation values
-		const scaleAnim = useSharedValue(1);
-		const opacityAnim = useSharedValue(priority === "future" ? 0.85 : 1);
+		// Animation hooks
+		const {
+			scaleAnim,
+			opacityAnim,
+			handlePressIn: handleCardPressIn,
+			handlePressOut: handleCardPressOut,
+		} = usePressAnimation(1);
+
+		// Set initial opacity for future cards
+		if (priority === "future" && opacityAnim.value === 1) {
+			opacityAnim.value = 0.85;
+		}
 
 		// Animation styles - keep transform animations separate from layout animations
 		const animatedStyle = useAnimatedStyle(() => ({
@@ -92,20 +89,14 @@ export const WasteCard = React.memo(
 
 		// Handle press interactions
 		const handlePressIn = () => {
-			scaleAnim.value = withSpring(0.95, {
-				damping: 15,
-				stiffness: 400,
-			});
+			handleCardPressIn();
 			if (Platform.OS === "ios") {
 				Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 			}
 		};
 
 		const handlePressOut = () => {
-			scaleAnim.value = withSpring(1, {
-				damping: 15,
-				stiffness: 400,
-			});
+			handleCardPressOut();
 		};
 
 		const getShadowStyle = () => {

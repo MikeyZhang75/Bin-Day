@@ -1,16 +1,14 @@
 import * as Haptics from "expo-haptics";
 import { useEffect } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
-import Animated, {
-	Easing,
-	useAnimatedStyle,
-	useSharedValue,
-	withSpring,
-	withTiming,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import {
+	useComponentAnimation,
+	usePressAnimation,
+} from "@/hooks/useAnimations";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { extractAddressComponents } from "@/lib/addressExtractor";
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
@@ -55,23 +53,20 @@ export function AddressDisplay({
 		"background",
 	);
 
-	// Animation values
-	const scaleAnim = useSharedValue(0.95);
-	const opacityAnim = useSharedValue(0);
-	const clearButtonScale = useSharedValue(1);
-	const clearButtonOpacity = useSharedValue(0.7);
+	// Animation hooks
+	const { scaleAnim, opacityAnim, animateIn, animateOut } =
+		useComponentAnimation();
+	const {
+		scaleAnim: clearButtonScale,
+		opacityAnim: clearButtonOpacity,
+		handlePressIn: handleClearPressIn,
+		handlePressOut: handleClearPressOut,
+	} = usePressAnimation(1);
 
 	// Entry animation
 	useEffect(() => {
-		scaleAnim.value = withSpring(1, {
-			damping: 18,
-			stiffness: 200,
-		});
-		opacityAnim.value = withTiming(1, {
-			duration: 350,
-			easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-		});
-	}, [scaleAnim, opacityAnim]);
+		animateIn();
+	}, [animateIn]);
 
 	// Container animated style
 	const containerAnimatedStyle = useAnimatedStyle(() => ({
@@ -82,38 +77,24 @@ export function AddressDisplay({
 	// Clear button animated style
 	const clearButtonAnimatedStyle = useAnimatedStyle(() => ({
 		transform: [{ scale: clearButtonScale.value }],
-		opacity: clearButtonOpacity.value,
+		opacity: clearButtonOpacity.value || 0.7,
 	}));
 
 	// Handle clear button interactions
 	const handlePressIn = () => {
-		clearButtonScale.value = withSpring(0.85, {
-			damping: 15,
-			stiffness: 400,
-		});
-		clearButtonOpacity.value = withTiming(1, { duration: 100 });
+		handleClearPressIn();
 		if (Platform.OS === "ios") {
 			Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 		}
 	};
 
 	const handlePressOut = () => {
-		clearButtonScale.value = withSpring(1, {
-			damping: 15,
-			stiffness: 400,
-		});
-		clearButtonOpacity.value = withTiming(0.7, { duration: 100 });
+		handleClearPressOut();
 	};
 
 	const handleClear = () => {
 		// Exit animation before clearing
-		scaleAnim.value = withTiming(0.95, { duration: 200 });
-		opacityAnim.value = withTiming(0, { duration: 200 }, () => {
-			"worklet";
-			// Call onClear after animation completes
-		});
-		// For now, call onClear immediately
-		onClear();
+		animateOut(onClear);
 	};
 
 	if (!selectedAddress) {
