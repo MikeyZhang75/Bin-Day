@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // SurfCoast-specific regex patterns for waste types
 // Test results show: FOGO, Glass Only, Landfill, Recycling
@@ -19,10 +19,14 @@ const surfCoastWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchSurfCoastData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.SURF_COAST_SHIRE, {
-		searchApiUrl: "https://www.surfcoast.vic.gov.au/api/v1/myarea/search",
-		wasteServicesUrl:
-			"https://www.surfcoast.vic.gov.au/ocapi/Public/myarea/wasteservices",
-		wasteTypePatterns: surfCoastWastePatterns,
-	});
+	return processGranicusCouncilData(
+		placeDetails,
+		COUNCIL_NAMES.SURF_COAST_SHIRE,
+		{
+			searchApiUrl: "https://www.surfcoast.vic.gov.au/api/v1/myarea/search",
+			wasteServicesUrl:
+				"https://www.surfcoast.vic.gov.au/ocapi/Public/myarea/wasteservices",
+			wasteTypePatterns: surfCoastWastePatterns,
+		},
+	);
 }

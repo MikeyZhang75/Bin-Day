@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Mildura-specific regex patterns for waste types
 const milduraWastePatterns: WasteTypeRegexPatterns = {
@@ -18,7 +18,7 @@ const milduraWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchMilduraData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.MILDURA_CITY, {
+	return processGranicusCouncilData(placeDetails, COUNCIL_NAMES.MILDURA_CITY, {
 		searchApiUrl: "https://www.mildura.vic.gov.au/api/v1/myarea/search",
 		wasteServicesUrl:
 			"https://www.mildura.vic.gov.au/ocapi/Public/myarea/wasteservices",

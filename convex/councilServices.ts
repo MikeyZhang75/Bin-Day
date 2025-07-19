@@ -1,39 +1,10 @@
 import { v } from "convex/values";
-import type { GooglePlaceDetails } from "@/types/googlePlaces";
 import { action } from "./_generated/server";
-import { COUNCIL_NAMES, type CouncilName } from "./councils";
-import { fetchAlpineShireData } from "./councils/implementations/alpineShire";
-import { fetchBallaratData } from "./councils/implementations/ballarat";
-import { fetchBanyuleData } from "./councils/implementations/banyule";
-import { fetchBawBawShireData } from "./councils/implementations/bawBawShire";
-import { fetchBaysideData } from "./councils/implementations/bayside";
-import { fetchCampaspeData } from "./councils/implementations/campaspe";
-import { fetchDandenongData } from "./councils/implementations/dandenong";
-import { fetchGannawarraData } from "./councils/implementations/gannawarra";
-import { fetchHumeData } from "./councils/implementations/hume";
-import { fetchKingstonData } from "./councils/implementations/kingston";
-import { fetchLoddonData } from "./councils/implementations/loddon";
-import { fetchMacedonRangesData } from "./councils/implementations/macedonRanges";
-import { fetchMansfieldData } from "./councils/implementations/mansfield";
-import { fetchMaribyrnongData } from "./councils/implementations/maribyrnong";
-import { fetchMaroondahData } from "./councils/implementations/maroondah";
-import { fetchMeltonData } from "./councils/implementations/melton";
-import { fetchMilduraData } from "./councils/implementations/mildura";
-import { fetchMonashData } from "./councils/implementations/monash";
-import { fetchMooraboolData } from "./councils/implementations/moorabool";
-import { fetchMorningtonPeninsulaData } from "./councils/implementations/morningtonPeninsula";
-import { fetchMountAlexanderData } from "./councils/implementations/mountAlexander";
-import { fetchMoyneData } from "./councils/implementations/moyne";
-import { fetchNillumbikData } from "./councils/implementations/nillumbik";
-import { fetchPyreneesData } from "./councils/implementations/pyrenees";
-import { fetchSheppartonData } from "./councils/implementations/shepparton";
-// import { fetchSouthernGrampiansData } from "./councils/implementations/southernGrampians";
-import { fetchStonningtonData } from "./councils/implementations/stonnington";
-import { fetchSurfCoastData } from "./councils/implementations/surfCoast";
-import { fetchSwanHillData } from "./councils/implementations/swanHill";
-import { fetchWangarattaData } from "./councils/implementations/wangaratta";
-import { fetchWhittleseaData } from "./councils/implementations/whittlesea";
-import { fetchYarraRangesData } from "./councils/implementations/yarraRanges";
+import type { CouncilName } from "./councils/core";
+import {
+	councilHandlers,
+	getSupportedCouncilNames,
+} from "./councils/implementations";
 
 export type WasteCollectionDates = {
 	landfillWaste: number | null;
@@ -50,81 +21,24 @@ export type CouncilData = {
 	result: WasteCollectionDates | null;
 };
 
-// Council-specific API handlers
-const councilHandlers: Record<
-	CouncilName,
-	(placeDetails: GooglePlaceDetails) => Promise<WasteCollectionDates>
-> = {
-	[COUNCIL_NAMES.CITY_OF_MONASH]: fetchMonashData,
-	[COUNCIL_NAMES.ALPINE_SHIRE]: fetchAlpineShireData,
-	[COUNCIL_NAMES.CITY_OF_BALLARAT]: fetchBallaratData,
-	[COUNCIL_NAMES.BANYULE_CITY]: fetchBanyuleData,
-	[COUNCIL_NAMES.GANNAWARRA_SHIRE]: fetchGannawarraData,
-	[COUNCIL_NAMES.BAW_BAW_SHIRE]: fetchBawBawShireData,
-	[COUNCIL_NAMES.BAYSIDE_CITY]: fetchBaysideData,
-	[COUNCIL_NAMES.CAMPASPE_SHIRE]: fetchCampaspeData,
-	[COUNCIL_NAMES.GREATER_DANDENONG]: fetchDandenongData,
-	[COUNCIL_NAMES.SHEPPARTON]: fetchSheppartonData,
-	[COUNCIL_NAMES.HUME_CITY]: fetchHumeData,
-	[COUNCIL_NAMES.KINGSTON_CITY]: fetchKingstonData,
-	[COUNCIL_NAMES.LODDON_SHIRE]: fetchLoddonData,
-	[COUNCIL_NAMES.MACEDON_RANGES]: fetchMacedonRangesData,
-	[COUNCIL_NAMES.MANSFIELD_SHIRE]: fetchMansfieldData,
-	[COUNCIL_NAMES.MARIBYRNONG_CITY]: fetchMaribyrnongData,
-	[COUNCIL_NAMES.MAROONDAH_CITY]: fetchMaroondahData,
-	[COUNCIL_NAMES.MELTON_CITY]: fetchMeltonData,
-	[COUNCIL_NAMES.MILDURA_CITY]: fetchMilduraData,
-	[COUNCIL_NAMES.MOORABOOL_SHIRE]: fetchMooraboolData,
-	[COUNCIL_NAMES.MORNINGTON_PENINSULA]: fetchMorningtonPeninsulaData,
-	[COUNCIL_NAMES.MOUNT_ALEXANDER]: fetchMountAlexanderData,
-	[COUNCIL_NAMES.MOYNE_SHIRE]: fetchMoyneData,
-	[COUNCIL_NAMES.NILLUMBIK_SHIRE]: fetchNillumbikData,
-	[COUNCIL_NAMES.PYRENEES_SHIRE]: fetchPyreneesData,
-	// [COUNCIL_NAMES.SOUTHERN_GRAMPIANS]: fetchSouthernGrampiansData,
-	[COUNCIL_NAMES.STONNINGTON_CITY]: fetchStonningtonData,
-	[COUNCIL_NAMES.SURF_COAST_SHIRE]: fetchSurfCoastData,
-	[COUNCIL_NAMES.SWAN_HILL_CITY]: fetchSwanHillData,
-	[COUNCIL_NAMES.WANGARATTA_CITY]: fetchWangarattaData,
-	[COUNCIL_NAMES.WHITTLESEA_CITY]: fetchWhittleseaData,
-	[COUNCIL_NAMES.YARRA_RANGES]: fetchYarraRangesData,
+// Create a union type of all supported council names for Convex schema
+const createCouncilUnion = () => {
+	const supportedCouncils = getSupportedCouncilNames();
+	// We need to use a type assertion here because TypeScript can't infer
+	// the variadic union type from a dynamic array
+	const literals = supportedCouncils.map((council) => v.literal(council));
+	// TypeScript limitation: can't infer union type from dynamic array
+	return v.union(
+		...(literals as [
+			ReturnType<typeof v.literal>,
+			...ReturnType<typeof v.literal>[],
+		]),
+	);
 };
 
 export const getCouncilData = action({
 	args: {
-		council: v.union(
-			v.literal(COUNCIL_NAMES.CITY_OF_MONASH),
-			v.literal(COUNCIL_NAMES.ALPINE_SHIRE),
-			v.literal(COUNCIL_NAMES.CITY_OF_BALLARAT),
-			v.literal(COUNCIL_NAMES.BANYULE_CITY),
-			v.literal(COUNCIL_NAMES.GANNAWARRA_SHIRE),
-			v.literal(COUNCIL_NAMES.BAW_BAW_SHIRE),
-			v.literal(COUNCIL_NAMES.BAYSIDE_CITY),
-			v.literal(COUNCIL_NAMES.CAMPASPE_SHIRE),
-			v.literal(COUNCIL_NAMES.GREATER_DANDENONG),
-			v.literal(COUNCIL_NAMES.SHEPPARTON),
-			v.literal(COUNCIL_NAMES.HUME_CITY),
-			v.literal(COUNCIL_NAMES.KINGSTON_CITY),
-			v.literal(COUNCIL_NAMES.LODDON_SHIRE),
-			v.literal(COUNCIL_NAMES.MACEDON_RANGES),
-			v.literal(COUNCIL_NAMES.MANSFIELD_SHIRE),
-			v.literal(COUNCIL_NAMES.MARIBYRNONG_CITY),
-			v.literal(COUNCIL_NAMES.MAROONDAH_CITY),
-			v.literal(COUNCIL_NAMES.MELTON_CITY),
-			v.literal(COUNCIL_NAMES.MILDURA_CITY),
-			v.literal(COUNCIL_NAMES.MOORABOOL_SHIRE),
-			v.literal(COUNCIL_NAMES.MORNINGTON_PENINSULA),
-			v.literal(COUNCIL_NAMES.MOUNT_ALEXANDER),
-			v.literal(COUNCIL_NAMES.MOYNE_SHIRE),
-			v.literal(COUNCIL_NAMES.NILLUMBIK_SHIRE),
-			v.literal(COUNCIL_NAMES.PYRENEES_SHIRE),
-			// v.literal(COUNCIL_NAMES.SOUTHERN_GRAMPIANS),
-			v.literal(COUNCIL_NAMES.STONNINGTON_CITY),
-			v.literal(COUNCIL_NAMES.SURF_COAST_SHIRE),
-			v.literal(COUNCIL_NAMES.SWAN_HILL_CITY),
-			v.literal(COUNCIL_NAMES.WANGARATTA_CITY),
-			v.literal(COUNCIL_NAMES.WHITTLESEA_CITY),
-			v.literal(COUNCIL_NAMES.YARRA_RANGES),
-		),
+		council: createCouncilUnion(),
 		placeDetails: v.object({
 			address_components: v.array(
 				v.object({
@@ -159,7 +73,7 @@ export const getCouncilData = action({
 
 		// The council parameter is already validated by Convex schema
 		// No need to normalize since it's a literal union type
-		const handler = councilHandlers[council];
+		const handler = councilHandlers[council as CouncilName];
 
 		if (!handler) {
 			return {

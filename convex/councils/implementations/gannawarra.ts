@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Gannawarra-specific regex patterns for waste types
 const gannawarraWastePatterns: WasteTypeRegexPatterns = {
@@ -19,10 +19,14 @@ const gannawarraWastePatterns: WasteTypeRegexPatterns = {
 export async function fetchGannawarraData(placeDetails: GooglePlaceDetails) {
 	// Note: Gannawarra API returns null for LatLon in some cases
 	// Distance calculation will be automatically skipped when LatLon is null
-	return processCouncilData(placeDetails, COUNCIL_NAMES.GANNAWARRA_SHIRE, {
-		searchApiUrl: "https://www.gannawarra.vic.gov.au/api/v1/myarea/search",
-		wasteServicesUrl:
-			"https://www.gannawarra.vic.gov.au/ocapi/Public/myarea/wasteservices",
-		wasteTypePatterns: gannawarraWastePatterns,
-	});
+	return processGranicusCouncilData(
+		placeDetails,
+		COUNCIL_NAMES.GANNAWARRA_SHIRE,
+		{
+			searchApiUrl: "https://www.gannawarra.vic.gov.au/api/v1/myarea/search",
+			wasteServicesUrl:
+				"https://www.gannawarra.vic.gov.au/ocapi/Public/myarea/wasteservices",
+			wasteTypePatterns: gannawarraWastePatterns,
+		},
+	);
 }

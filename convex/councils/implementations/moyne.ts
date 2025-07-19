@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Moyne-specific regex patterns for waste types
 // Test results show: FOGO, Glass Only, Landfill, Recycling
@@ -19,7 +19,7 @@ const moyneWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchMoyneData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.MOYNE_SHIRE, {
+	return processGranicusCouncilData(placeDetails, COUNCIL_NAMES.MOYNE_SHIRE, {
 		searchApiUrl: "https://www.moyne.vic.gov.au/api/v1/myarea/search",
 		wasteServicesUrl:
 			"https://www.moyne.vic.gov.au/ocapi/Public/myarea/wasteservices",

@@ -6,7 +6,7 @@ A React Native app that helps Victorian residents find waste collection informat
 
 - 🔍 **Address Search**: Search for any Victorian address using Google Places Autocomplete with location restriction
 - 📅 **Collection Dates**: View upcoming collection dates for all waste types with "Today" and "Tomorrow" highlighting
-- 🏛️ **Council Support**: Currently supports 32 Victorian councils with more being added
+- 🏛️ **Council Support**: Currently supports 33 Victorian councils with more being added
 - 📱 **Cross-Platform**: Works on iOS, Android, and web browsers
 - 🌓 **Dark Mode**: Automatic theme switching based on device preferences
 - ✨ **Smooth Animations**: Polished UI with React Native Reanimated
@@ -25,6 +25,7 @@ Currently supporting the following Victorian councils:
 - City of Kingston
 - City of Monash
 - City of Whittlesea
+- Colac Otway Shire
 - Gannawarra Shire
 - Greater Dandenong City
 - Greater Shepparton City
@@ -136,6 +137,9 @@ bin-day/
 ├── convex/                 # Backend functions
 │   ├── councils/           # Council implementations
 │   │   ├── core/           # Shared utilities and types
+│   │   ├── providers/      # Third-party API integrations
+│   │   │   ├── granicus/   # Granicus API (most councils)
+│   │   │   └── whatbinday/ # WhatBinDay API
 │   │   └── implementations/ # Individual council APIs
 │   ├── councilServices.ts  # Main orchestrator
 │   └── googlePlaces.ts     # Google Places integration
@@ -182,30 +186,66 @@ The project uses:
 
 ### Adding a New Council
 
-1. Check if the council uses the standard API pattern or needs custom implementation
-2. Create a new file in `convex/councils/implementations/[councilName].ts`
-3. For standard pattern:
+1. **Identify API Provider**:
+
+   - Check if the council uses Granicus (most common - look for `/api/v1/myarea/search` endpoints)
+   - Check if the council uses WhatBinDay
+   - Determine if custom implementation is needed
+
+2. **Create Implementation** in `convex/councils/implementations/[councilName].ts`
+
+3. **For Granicus councils** (most common):
 
    ```typescript
+   import type { GooglePlaceDetails } from "@/types/googlePlaces";
+   import { COUNCIL_NAMES } from "../core";
+   import {
+     processGranicusCouncilData,
+     type WasteTypeRegexPatterns,
+   } from "../providers/granicus";
+
+   const wastePatterns: WasteTypeRegexPatterns = {
+     landfillWaste:
+       /general-waste[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
+     recycling:
+       /recycling[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
+     foodAndGardenWaste:
+       /green-waste[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
+   };
+
    export async function fetchCouncilData(placeDetails: GooglePlaceDetails) {
-     return processCouncilData(placeDetails, COUNCIL_NAMES.COUNCIL_NAME, {
-       searchApiUrl: "https://council.vic.gov.au/api/v1/myarea/search",
-       wasteServicesUrl:
-         "https://council.vic.gov.au/ocapi/Public/myarea/wasteservices",
-       wasteTypePatterns: {
-         landfillWaste: /pattern/,
-         recycling: /pattern/,
-         // ... other patterns
-       },
-     });
+     return processGranicusCouncilData(
+       placeDetails,
+       COUNCIL_NAMES.COUNCIL_NAME,
+       {
+         searchApiUrl: "https://council.vic.gov.au/api/v1/myarea/search",
+         wasteServicesUrl:
+           "https://council.vic.gov.au/ocapi/Public/myarea/wasteservices",
+         wasteTypePatterns: wastePatterns,
+       }
+     );
    }
    ```
 
-4. Add the council name to `COUNCIL_NAMES` in `convex/councils/core/types.ts`
-5. Register the handler in `convex/councilServices.ts`
-6. Update the Convex schema with the new council literal
-7. Test with real addresses from the council area
-8. Update this README with the new council
+4. **For WhatBinDay councils**:
+
+   ```typescript
+   import type { GooglePlaceDetails } from "@/types/googlePlaces";
+   import { COUNCIL_NAMES } from "../core";
+   import { processWhatBinDayCouncilData } from "../providers/whatbinday";
+
+   export async function fetchCouncilData(placeDetails: GooglePlaceDetails) {
+     return processWhatBinDayCouncilData(placeDetails, COUNCIL_NAMES.COUNCIL_NAME);
+   }
+   ```
+
+   Note: Add the council's API key to `WHATBINDAY_API_KEYS` in `convex/councils/providers/whatbinday/constants.ts`
+
+5. Add the council name to `COUNCIL_NAMES` in `convex/councils/core/types.ts`
+6. Register the handler in `convex/councilServices.ts`
+7. Update the Convex schema with the new council literal
+8. Test with real addresses from the council area
+9. Update this README with the new council
 
 ## API Response Format
 

@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Whittlesea-specific regex patterns for waste types
 const whittleseaWastePatterns: WasteTypeRegexPatterns = {
@@ -18,10 +18,14 @@ const whittleseaWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchWhittleseaData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.WHITTLESEA_CITY, {
-		searchApiUrl: "https://www.whittlesea.vic.gov.au/api/v1/myarea/search",
-		wasteServicesUrl:
-			"https://www.whittlesea.vic.gov.au/ocapi/Public/myarea/wasteservices",
-		wasteTypePatterns: whittleseaWastePatterns,
-	});
+	return processGranicusCouncilData(
+		placeDetails,
+		COUNCIL_NAMES.WHITTLESEA_CITY,
+		{
+			searchApiUrl: "https://www.whittlesea.vic.gov.au/api/v1/myarea/search",
+			wasteServicesUrl:
+				"https://www.whittlesea.vic.gov.au/ocapi/Public/myarea/wasteservices",
+			wasteTypePatterns: whittleseaWastePatterns,
+		},
+	);
 }

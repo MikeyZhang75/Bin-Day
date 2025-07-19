@@ -3,4 +3,3 @@
 export * from "./addressFormatter";
 export * from "./errors";
 export * from "./types";
-export * from "./utils";

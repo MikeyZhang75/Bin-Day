@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Macedon Ranges-specific regex patterns for waste types
 const macedonRangesWastePatterns: WasteTypeRegexPatterns = {
@@ -18,10 +18,14 @@ const macedonRangesWastePatterns: WasteTypeRegexPatterns = {
 };
 
 export async function fetchMacedonRangesData(placeDetails: GooglePlaceDetails) {
-	return processCouncilData(placeDetails, COUNCIL_NAMES.MACEDON_RANGES, {
-		searchApiUrl: "https://www.mrsc.vic.gov.au/api/v1/myarea/search",
-		wasteServicesUrl:
-			"https://www.mrsc.vic.gov.au/ocapi/Public/myarea/wasteservices",
-		wasteTypePatterns: macedonRangesWastePatterns,
-	});
+	return processGranicusCouncilData(
+		placeDetails,
+		COUNCIL_NAMES.MACEDON_RANGES,
+		{
+			searchApiUrl: "https://www.mrsc.vic.gov.au/api/v1/myarea/search",
+			wasteServicesUrl:
+				"https://www.mrsc.vic.gov.au/ocapi/Public/myarea/wasteservices",
+			wasteTypePatterns: macedonRangesWastePatterns,
+		},
+	);
 }

@@ -33,6 +33,7 @@ export const COUNCIL_NAMES = {
 	WHITTLESEA_CITY: "City of Whittlesea",
 	YARRA_RANGES: "Yarra Ranges Shire",
 	MARIBYRNONG_CITY: "Maribyrnong City",
+	COLAC_OTWAY: "Colac Otway Shire",
 } as const;
 
 export type CouncilName = (typeof COUNCIL_NAMES)[keyof typeof COUNCIL_NAMES];

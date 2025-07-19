@@ -1,9 +1,9 @@
 import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
 import {
-	COUNCIL_NAMES,
-	processCouncilData,
+	processGranicusCouncilData,
 	type WasteTypeRegexPatterns,
-} from "../core";
+} from "../providers/granicus";
 
 // Hume-specific regex patterns for waste types
 const humeWastePatterns: WasteTypeRegexPatterns = {
@@ -19,7 +19,7 @@ const humeWastePatterns: WasteTypeRegexPatterns = {
 export async function fetchHumeData(placeDetails: GooglePlaceDetails) {
 	// Note: Hume API returns null for LatLon like Gannawarra
 	// Distance calculation will be automatically skipped when LatLon is null
-	return processCouncilData(placeDetails, COUNCIL_NAMES.HUME_CITY, {
+	return processGranicusCouncilData(placeDetails, COUNCIL_NAMES.HUME_CITY, {
 		searchApiUrl: "https://www.hume.vic.gov.au/api/v1/myarea/search",
 		wasteServicesUrl:
 			"https://www.hume.vic.gov.au/ocapi/Public/myarea/wasteservices",

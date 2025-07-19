@@ -141,17 +141,39 @@ Note: Biome is configured with tab indentation and double quotes for strings.
 
 - **types.ts**: Council names constants and validation
 - **errors.ts**: Standardized error classes (CouncilAPIError, AddressNotFoundError)
-- **utils.ts**: Common utilities for council API integration
 - **addressFormatter.ts**: Council-specific address formatting
+- **index.ts**: Core module exports
+
+#### Council Providers (`convex/councils/providers/`)
+
+Third-party API integrations organized by provider:
+
+##### Granicus Provider (`providers/granicus/`)
+
+- **index.ts**: Re-exports all provider functionality
+- **api.ts**: Main API functions (processGranicusCouncilData, searchGranicusAddress, fetchGranicusWasteServices)
+- **types.ts**: Granicus-specific types (GranicusApiResponse, WasteTypeRegexPatterns)
+- **parser.ts**: HTML parsing utilities for waste collection dates
+- **constants.ts**: API headers and endpoint patterns
+
+##### WhatBinDay Provider (`providers/whatbinday/`)
+
+- **index.ts**: Re-exports all provider functionality
+- **api.ts**: Main API function (processWhatBinDayCouncilData)
+- **constants.ts**: API URLs, headers, and API keys
+- **types.ts**: WhatBinDay-specific types (WhatBinDayAddress, ParsedBinEvent, WhatBinDayConfig)
+- **formatter.ts**: Address formatting for WhatBinDay API
+- **parser.ts**: HTML parsing for waste collection dates
 
 #### Council Implementations (`convex/councils/implementations/`)
 
-Each council has its own implementation file following one of two patterns:
+Each council has its own implementation file using one of the available providers:
 
-1. **Standard Pattern** (e.g., monash.ts): Uses shared `processCouncilData` utility
-2. **Custom Pattern** (e.g., bawBawShire.ts): Custom API integration for unique council systems
+1. **Granicus Pattern** (e.g., monash.ts): Uses Granicus API via `processGranicusCouncilData`
+2. **WhatBinDay Pattern** (e.g., colacOtway.ts): Uses WhatBinDay API via `processWhatBinDayCouncilData`
+3. **Custom Pattern** (e.g., bawBawShire.ts): Custom API integration for unique council systems
 
-Currently supports 32 Victorian councils with standardized waste collection data format.
+Currently supports 33 Victorian councils with standardized waste collection data format.
 
 ### GitHub Actions
 
@@ -207,18 +229,28 @@ Unified animation system using React Native Reanimated 3:
 
 ### Council APIs
 
-Two main integration patterns:
+Three main API providers:
 
-1. **Standard Pattern**: Most councils use a common API structure
+1. **Granicus API** (Most councils)
 
+   - Government technology platform used by ~25 Victorian councils
    - Search endpoint: `/api/v1/myarea/search`
    - Waste services endpoint: `/ocapi/Public/myarea/wasteservices`
-   - Shared utilities in `processCouncilData`
+   - Implementation: `providers/granicus/`
+   - Used by: Monash, Whittlesea, Yarra Ranges, etc.
 
-2. **Custom Pattern**: Some councils (e.g., Baw Baw) have unique APIs
-   - Custom session management
-   - Multiple API calls for data retrieval
-   - Council-specific date parsing
+2. **WhatBinDay API** (Selected councils)
+
+   - Third-party waste collection service
+   - Single endpoint: `https://console.whatbinday.com/api/search`
+   - Requires council-specific API keys
+   - Implementation: `providers/whatbinday/`
+   - Used by: Colac Otway
+
+3. **Custom APIs** (Individual councils)
+   - Baw Baw Shire: Custom session-based API
+   - Hobsons Bay: REST API with property search
+   - Each has unique implementation requirements
 
 ## Development Guidelines
 
@@ -277,29 +309,73 @@ import { ThemedView } from "@/components/ThemedView";
 
 ## Adding a New Council
 
-1. **Check API Pattern**: Determine if the council uses standard or custom API
+1. **Identify API Provider**:
+
+   - Check if council uses Granicus (most common)
+   - Check if council uses WhatBinDay
+   - Determine if custom implementation needed
+
 2. **Create Implementation**: Add file in `convex/councils/implementations/[councilName].ts`
+
 3. **Update Types**: Add council name to `COUNCIL_NAMES` in `convex/councils/core/types.ts`
+
 4. **Register Handler**: Add handler to `councilHandlers` in `convex/councilServices.ts`
+
 5. **Update Schema**: Add council literal to Convex schema in `councilServices.ts`
+
 6. **Test Implementation**: Verify with real addresses
+
 7. **Update Documentation**: Add to supported councils list
 
-### Standard Implementation Example
+### Implementation Examples
+
+#### Granicus Implementation (Most Common)
 
 ```typescript
+import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
+import {
+  processGranicusCouncilData,
+  type WasteTypeRegexPatterns,
+} from "../providers/granicus";
+
+const wastePatterns: WasteTypeRegexPatterns = {
+  landfillWaste:
+    /general-waste[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
+  recycling:
+    /recycling[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
+  foodAndGardenWaste:
+    /green-waste[\s\S]*?<div class="next-service">\s*([\s\S]*?)\s*<\/div>/,
+};
+
 export async function fetchCouncilData(placeDetails: GooglePlaceDetails) {
-  return processCouncilData(placeDetails, COUNCIL_NAMES.COUNCIL_NAME, {
+  return processGranicusCouncilData(placeDetails, COUNCIL_NAMES.COUNCIL_NAME, {
     searchApiUrl: "https://council.vic.gov.au/api/v1/myarea/search",
     wasteServicesUrl:
       "https://council.vic.gov.au/ocapi/Public/myarea/wasteservices",
-    wasteTypePatterns: {
-      landfillWaste: /pattern/,
-      recycling: /pattern/,
-      // ... other patterns
-    },
+    wasteTypePatterns: wastePatterns,
   });
 }
+```
+
+#### WhatBinDay Implementation
+
+```typescript
+import type { GooglePlaceDetails } from "@/types/googlePlaces";
+import { COUNCIL_NAMES } from "../core";
+import { processWhatBinDayCouncilData } from "../providers/whatbinday";
+
+export async function fetchCouncilData(placeDetails: GooglePlaceDetails) {
+  // Simply use the WhatBinDay provider with the council name
+  // The API key is already configured in the provider's constants
+  return processWhatBinDayCouncilData(placeDetails, COUNCIL_NAMES.COUNCIL_NAME);
+}
+```
+
+#### Custom Implementation
+
+```typescript
+// See bawBawShire.ts or hobsonsBay.ts for examples
 ```
 
 ## Waste Collection Data Format
