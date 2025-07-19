@@ -24,6 +24,10 @@ const MAPPING = {
 	"paperplane.fill": "send",
 	"chevron.left.forwardslash.chevron.right": "code",
 	"chevron.right": "chevron-right",
+	location: "location-on",
+	xmark: "close",
+	magnifyingglass: "search",
+	"flask.fill": "science",
 } as IconMapping;
 
 /**

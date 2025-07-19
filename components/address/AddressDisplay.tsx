@@ -1,9 +1,16 @@
+import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { useEffect } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+	Extrapolation,
+	interpolate,
+	useAnimatedStyle,
+	withSequence,
+	withSpring,
+	withTiming,
+} from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import {
 	useComponentAnimation,
@@ -40,17 +47,29 @@ export function AddressDisplay({
 	// Theme colors
 	const textColor = useThemeColor({}, "text");
 	const tintColor = useThemeColor({}, "tint");
+	const backgroundColor = useThemeColor({}, "background");
+	const isDarkMode = backgroundColor === "#151718";
+
+	// Modern card design with proper separation
 	const cardBgColor = useThemeColor(
-		{ light: "#FFFFFF", dark: "#1C1C1E" },
+		{ light: "rgba(249, 250, 251, 0.8)", dark: "rgba(28, 28, 30, 0.95)" },
 		"background",
 	);
 	const borderColor = useThemeColor(
-		{ light: "transparent", dark: "rgba(255,255,255,0.06)" },
+		{ light: "rgba(0, 0, 0, 0.12)", dark: "rgba(255, 255, 255, 0.15)" },
 		"text",
 	);
 	const clearButtonBg = useThemeColor(
-		{ light: "rgba(0,0,0,0.05)", dark: "rgba(255,255,255,0.1)" },
+		{ light: "rgba(0, 0, 0, 0.08)", dark: "rgba(255, 255, 255, 0.12)" },
 		"background",
+	);
+	const iconBgColor = useThemeColor(
+		{ light: `${tintColor}10`, dark: `${tintColor}15` },
+		"tint",
+	);
+	const secondaryTextColor = useThemeColor(
+		{ light: "rgba(17, 24, 28, 0.6)", dark: "rgba(236, 237, 238, 0.6)" },
+		"text",
 	);
 
 	// Animation hooks
@@ -68,17 +87,46 @@ export function AddressDisplay({
 		animateIn();
 	}, [animateIn]);
 
-	// Container animated style
-	const containerAnimatedStyle = useAnimatedStyle(() => ({
-		transform: [{ scale: scaleAnim.value }],
-		opacity: opacityAnim.value,
-	}));
+	// Container animated style with enhanced spring physics
+	const containerAnimatedStyle = useAnimatedStyle(() => {
+		const scale = withSpring(scaleAnim.value, {
+			damping: 14,
+			stiffness: 120,
+			mass: 0.8,
+		});
+		return {
+			transform: [{ scale }],
+			opacity: opacityAnim.value,
+		};
+	});
 
-	// Clear button animated style
-	const clearButtonAnimatedStyle = useAnimatedStyle(() => ({
-		transform: [{ scale: clearButtonScale.value }],
-		opacity: clearButtonOpacity.value || 0.7,
-	}));
+	// Clear button animated style with rotation on press
+	const clearButtonAnimatedStyle = useAnimatedStyle(() => {
+		const scale = withSpring(clearButtonScale.value, {
+			damping: 15,
+			stiffness: 300,
+		});
+		const rotation = interpolate(
+			clearButtonScale.value,
+			[1, 0.9],
+			[0, -90],
+			Extrapolation.CLAMP,
+		);
+		return {
+			transform: [{ scale }, { rotate: `${rotation}deg` }],
+			opacity: clearButtonOpacity.value || 1,
+		};
+	});
+
+	// Icon container animated style with subtle bounce
+	const iconContainerAnimatedStyle = useAnimatedStyle(() => {
+		const scale = withSequence(
+			withTiming(1, { duration: 0 }),
+			withSpring(1.05, { damping: 10, stiffness: 100 }),
+			withSpring(1, { damping: 10, stiffness: 100 }),
+		);
+		return scaleAnim.value > 0.5 ? { transform: [{ scale }] } : {};
+	});
 
 	// Handle clear button interactions
 	const handlePressIn = () => {
@@ -119,120 +167,159 @@ export function AddressDisplay({
 		line1 = selectedAddress;
 	}
 
-	return (
-		<Animated.View style={[styles.container, containerAnimatedStyle]}>
-			<ThemedView
+	// Card content component
+	const CardContent = () => (
+		<View style={styles.mainContent}>
+			<Animated.View
 				style={[
-					styles.card,
-					{
-						backgroundColor: cardBgColor,
-						borderColor,
-						...Platform.select({
-							ios: {
-								shadowColor: "#000",
-								shadowOffset: { width: 0, height: 2 },
-								shadowOpacity: 0.06,
-								shadowRadius: 12,
-							},
-							android: {
-								elevation: 3,
-							},
-						}),
-					},
+					styles.iconContainer,
+					{ backgroundColor: iconBgColor },
+					iconContainerAnimatedStyle,
 				]}
 			>
-				<View style={styles.contentContainer}>
-					<View style={styles.addressContainer}>
-						<ThemedText style={styles.addressLine1}>{line1}</ThemedText>
-						{line2 && (
-							<ThemedText style={[styles.addressLine2, { color: textColor }]}>
-								{line2}
-							</ThemedText>
-						)}
-					</View>
-					{selectedCouncil && (
-						<View
-							style={[
-								styles.councilBadge,
-								{ backgroundColor: `${tintColor}15` },
-							]}
+				<IconSymbol name="location" size={20} color={tintColor} />
+			</Animated.View>
+			<View style={styles.contentContainer}>
+				<View style={styles.addressContainer}>
+					<ThemedText style={[styles.addressLine1, { color: textColor }]}>
+						{line1}
+					</ThemedText>
+					{line2 && (
+						<ThemedText
+							style={[styles.addressLine2, { color: secondaryTextColor }]}
 						>
-							<ThemedText
-								style={[styles.councilBadgeText, { color: tintColor }]}
-							>
-								{selectedCouncil}
-							</ThemedText>
-						</View>
+							{line2}
+						</ThemedText>
 					)}
 				</View>
-				<AnimatedPressable
-					onPress={handleClear}
-					onPressIn={handlePressIn}
-					onPressOut={handlePressOut}
+				{selectedCouncil && (
+					<View
+						style={[
+							styles.councilBadge,
+							{
+								backgroundColor: isDarkMode
+									? `${tintColor}20`
+									: `${tintColor}12`,
+								borderColor: isDarkMode ? `${tintColor}30` : `${tintColor}20`,
+							},
+						]}
+					>
+						<ThemedText style={[styles.councilBadgeText, { color: tintColor }]}>
+							{selectedCouncil}
+						</ThemedText>
+					</View>
+				)}
+			</View>
+			<AnimatedPressable
+				onPress={handleClear}
+				onPressIn={handlePressIn}
+				onPressOut={handlePressOut}
+				style={[
+					styles.clearButton,
+					{ backgroundColor: clearButtonBg },
+					clearButtonAnimatedStyle,
+				]}
+				accessible={true}
+				accessibilityRole="button"
+				accessibilityLabel="Remove selected address"
+				accessibilityHint={`Currently showing ${line1}${locality ? `, ${locality}` : ""}. Double tap to search for a new address.`}
+			>
+				<IconSymbol name="xmark" size={18} color={textColor} />
+			</AnimatedPressable>
+		</View>
+	);
+
+	return (
+		<Animated.View style={[styles.container, containerAnimatedStyle]}>
+			{Platform.OS === "ios" ? (
+				<BlurView
 					style={[
-						styles.clearButton,
-						{ backgroundColor: clearButtonBg },
-						clearButtonAnimatedStyle,
+						styles.card,
+						{
+							borderColor,
+						},
 					]}
-					accessible={true}
-					accessibilityRole="button"
-					accessibilityLabel="Remove selected address"
-					accessibilityHint={`Currently showing ${line1}${locality ? `, ${locality}` : ""}. Double tap to search for a new address.`}
+					intensity={isDarkMode ? 25 : 45}
+					tint={isDarkMode ? "dark" : "light"}
 				>
-					<IconSymbol name="xmark" size={16} color={textColor} />
-				</AnimatedPressable>
-			</ThemedView>
+					<CardContent />
+				</BlurView>
+			) : (
+				<View
+					style={[
+						styles.card,
+						{
+							backgroundColor: cardBgColor,
+							borderColor,
+						},
+					]}
+				>
+					<CardContent />
+				</View>
+			)}
 		</Animated.View>
 	);
 }
 
 const styles = StyleSheet.create({
 	container: {
-		marginBottom: SPACING.md,
+		marginBottom: SPACING.lg,
 	},
 	card: {
+		padding: SPACING.md + 2,
+		borderRadius: 24,
+		borderWidth: 1,
+		overflow: "hidden",
+	},
+	mainContent: {
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		padding: SPACING.md,
-		borderRadius: 20,
-		borderWidth: 1,
+	},
+	iconContainer: {
+		width: 44,
+		height: 44,
+		borderRadius: 14,
+		justifyContent: "center",
+		alignItems: "center",
+		marginRight: SPACING.md,
 	},
 	contentContainer: {
 		flex: 1,
 		paddingRight: SPACING.sm,
 	},
 	addressContainer: {
-		gap: SPACING.xs,
+		gap: 2,
 	},
 	addressLine1: {
-		fontSize: 20,
+		fontSize: 18,
 		fontWeight: "700",
-		letterSpacing: -0.5,
-		lineHeight: 24,
+		letterSpacing: -0.3,
+		lineHeight: 22,
 	},
 	addressLine2: {
-		fontSize: 15,
+		fontSize: 14,
 		fontWeight: "500",
-		opacity: 0.7,
-		lineHeight: 20,
+		lineHeight: 18,
 	},
 	councilBadge: {
-		paddingHorizontal: 10,
-		paddingVertical: 4,
-		borderRadius: 8,
+		paddingHorizontal: 12,
+		paddingVertical: 5,
+		borderRadius: 10,
 		marginTop: SPACING.sm,
 		alignSelf: "flex-start",
+		borderWidth: 1,
 	},
 	councilBadgeText: {
-		fontSize: 13,
-		fontWeight: "600",
-		letterSpacing: 0.2,
+		fontSize: 12,
+		fontWeight: "700",
+		letterSpacing: 0.5,
+		textTransform: "uppercase",
 	},
 	clearButton: {
-		width: 32,
-		height: 32,
-		borderRadius: 16,
+		width: 36,
+		height: 36,
+		borderRadius: 18,
 		justifyContent: "center",
 		alignItems: "center",
 		marginLeft: SPACING.sm,
