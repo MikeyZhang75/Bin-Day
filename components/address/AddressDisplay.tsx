@@ -141,8 +141,10 @@ export function AddressDisplay({
 	};
 
 	const handleClear = () => {
-		// Exit animation before clearing
-		animateOut(onClear);
+		// Start exit animation immediately (parent handles the actual clearing)
+		animateOut();
+		// Notify parent to start coordinated animation
+		onClear();
 	};
 
 	if (!selectedAddress) {

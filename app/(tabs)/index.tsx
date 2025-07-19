@@ -81,17 +81,24 @@ export default function HomeScreen() {
 		animateEmptyState,
 		animateFadeIn,
 		animateFadeOut,
+		animateClearAddress,
 	} = useAnimations();
 
 	const selectedContentAnimatedStyle = useAnimatedStyle(() => {
+		// Add subtle scale animation for smoother transition
+		const scale = 0.98 + 0.02 * fadeAnim.value;
 		return {
 			opacity: fadeAnim.value,
+			transform: [{ scale }],
 		};
 	});
 
 	const emptyStateAnimatedStyle = useAnimatedStyle(() => {
+		// Complementary scale animation for smooth entrance
+		const scale = 0.95 + 0.05 * emptyStateFadeAnim.value;
 		return {
 			opacity: emptyStateFadeAnim.value,
+			transform: [{ scale }],
 		};
 	});
 
@@ -164,9 +171,12 @@ export default function HomeScreen() {
 	};
 
 	const handleClearSelectedAddress = () => {
-		console.log("[Clear Address] Clearing selected address");
-		clearSelectedAddress();
-		Keyboard.dismiss();
+		console.log("[Clear Address] Starting coordinated clear animation");
+		// Start the coordinated animation, then clear state after completion
+		animateClearAddress(() => {
+			clearSelectedAddress();
+			Keyboard.dismiss();
+		});
 	};
 
 	// Dismiss keyboard when tapping outside

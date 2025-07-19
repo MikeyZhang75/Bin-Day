@@ -100,6 +100,43 @@ export function useAnimations() {
 		});
 	}, [fadeAnim]);
 
+	// Coordinated clear animation for smooth transition
+	const animateClearAddress = useCallback(
+		(onComplete?: () => void) => {
+			console.log("[animateClearAddress] Starting coordinated clear animation");
+
+			// Start all animations in parallel for smooth crossfade
+			// 1. Fade out selected content with slight scale down
+			fadeAnim.value = withTiming(0, {
+				duration: 400,
+				easing: ANIMATION_CONFIG.easing,
+			});
+
+			// 2. Fade in empty state with overlapping timing for smooth crossfade
+			emptyStateFadeAnim.value = withDelay(
+				100, // Start early for overlap effect
+				withTiming(
+					1,
+					{
+						duration: 350,
+						easing: ANIMATION_CONFIG.easing,
+					},
+					() => {
+						"worklet";
+						// Clear state after all animations complete
+						if (onComplete) {
+							// Small delay to ensure animations are visually complete
+							runOnJS(() => {
+								setTimeout(onComplete, 50);
+							})();
+						}
+					},
+				),
+			);
+		},
+		[fadeAnim, emptyStateFadeAnim],
+	);
+
 	// Cleanup is handled automatically by Reanimated, but for complex scenarios
 	// we can manually cancel animations on unmount
 	useEffect(() => {
@@ -133,6 +170,7 @@ export function useAnimations() {
 		animateEmptyState,
 		animateFadeIn,
 		animateFadeOut,
+		animateClearAddress,
 	};
 }
 
@@ -151,13 +189,24 @@ export function useComponentAnimation(initialScale = 0.95) {
 
 	const animateOut = useCallback(
 		(onComplete?: () => void) => {
-			scaleAnim.value = withTiming(initialScale, { duration: 200 });
-			opacityAnim.value = withTiming(0, { duration: 200 }, () => {
-				"worklet";
-				if (onComplete) {
-					runOnJS(onComplete)();
-				}
+			// Match the coordinated animation timing
+			scaleAnim.value = withTiming(initialScale, {
+				duration: 300,
+				easing: ANIMATION_CONFIG.easing,
 			});
+			opacityAnim.value = withTiming(
+				0,
+				{
+					duration: 300,
+					easing: ANIMATION_CONFIG.easing,
+				},
+				() => {
+					"worklet";
+					if (onComplete) {
+						runOnJS(onComplete)();
+					}
+				},
+			);
 		},
 		[scaleAnim, opacityAnim, initialScale],
 	);
